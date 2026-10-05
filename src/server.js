@@ -100,7 +100,7 @@ async function boot() {
   startPaymentPoller();
 
   // 3. Start HTTP server
-  app.listen(config.server.port, () => {
+  app.listen(config.server.port, '0.0.0.0', () => {
     console.log(`\n ██████╗  █████╗ ██████╗  █████╗ ██╗  ██╗`);
     console.log(` ██╔══██╗██╔══██╗██╔══██╗██╔══██╗╚██╗██╔╝`);
     console.log(` ██████╔╝███████║██████╔╝███████║ ╚███╔╝ `);
