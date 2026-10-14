@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 
 import { config } from './config/index.js';
 import { initDb } from './utils/initDb.js';
+import { seedProducts } from './utils/seedDb.js';
 import { startPaymentPoller } from './services/paymentPoller.js';
 
 // Routes
@@ -98,10 +99,13 @@ async function boot() {
   // 1. Initialize DB (creates tables if not exist)
   await initDb();
 
-  // 2. Start payment poller
+  // 2. Auto-seed if empty
+  await seedProducts();
+
+  // 3. Start payment poller
   startPaymentPoller();
 
-  // 3. Start HTTP server
+  // 4. Start HTTP server
   app.listen(config.server.port, '0.0.0.0', () => {
     console.log(`\n ██████╗  █████╗ ██████╗  █████╗ ██╗  ██╗`);
     console.log(` ██╔══██╗██╔══██╗██╔══██╗██╔══██╗╚██╗██╔╝`);
