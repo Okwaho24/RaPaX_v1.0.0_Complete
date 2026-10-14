@@ -1,23 +1,19 @@
 // ─────────────────────────────────────────────────────────────────
 //  RaPaX™ — Delivery Service
 //  Generates secure expiring download tokens.
-//  Serves fingerprinted assets. Logs every delivery event.
+//  Resolves tokens to signed R2 URLs. Logs every delivery event.
 // ─────────────────────────────────────────────────────────────────
 import crypto from 'crypto';
-import fs from 'fs';
 import path from 'path';
 import { DeliveryModel } from '../models/deliveryModel.js';
 import { FingerprintModel } from '../models/fingerprintModel.js';
 import { TransactionModel, TxStatus } from '../models/transactionModel.js';
 import { auditLog, EventType } from '../utils/auditLogger.js';
+import { getSignedDownloadUrl } from './r2Service.js';
 
 export const DeliveryService = {
 
-  /**
-   * Issue a secure expiring download link after fingerprinting completes.
-   */
   async issueDelivery({ transactionId, product, fingerprint }) {
-    // Generate a cryptographically random download token — no file path exposed
     const downloadToken = crypto.randomBytes(48).toString('hex');
 
     const delivery = DeliveryModel.create({
@@ -29,7 +25,6 @@ export const DeliveryService = {
       file_hash:      fingerprint.file_hash,
     });
 
-    // Advance transaction to 'delivering'
     TransactionModel.updateStatus(transactionId, TxStatus.DELIVERING);
 
     auditLog({
@@ -50,11 +45,7 @@ export const DeliveryService = {
     return delivery;
   },
 
-  /**
-   * Resolve a download token to a file path and serve it.
-   * Returns { filePath, filename } or throws on invalid/expired token.
-   */
-  resolveToken(token) {
+  async resolveToken(token) {
     const delivery = DeliveryModel.findByToken(token);
 
     if (!delivery) {
@@ -70,13 +61,9 @@ export const DeliveryService = {
       throw Object.assign(new Error('Fingerprint record missing'), { status: 500 });
     }
 
-    const filePath = fingerprint.fingerprinted_file_path;
+    const r2Key = fingerprint.fingerprinted_file_path;
+    const signedUrl = await getSignedDownloadUrl(r2Key, 900);
 
-    if (!fs.existsSync(filePath)) {
-      throw Object.assign(new Error('File not found on server'), { status: 404 });
-    }
-
-    // Record download event
     DeliveryModel.recordDownload(delivery.delivery_id);
     TransactionModel.updateStatus(delivery.transaction_id, TxStatus.COMPLETE);
 
@@ -88,15 +75,15 @@ export const DeliveryService = {
       deliveryId:    delivery.delivery_id,
       actor:         delivery.buyer_wallet || 'anonymous',
       payload:       {
-        action:       'ASSET_DOWNLOADED',
+        action:         'ASSET_DOWNLOADED',
         download_count: delivery.download_count + 1,
-        file_hash:    delivery.file_hash,
+        file_hash:      delivery.file_hash,
       },
     });
 
     return {
-      filePath,
-      filename: path.basename(filePath),
+      signedUrl,
+      filename: path.basename(r2Key),
       delivery,
     };
   },
