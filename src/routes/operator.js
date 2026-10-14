@@ -13,19 +13,12 @@ import { TransactionModel } from '../models/transactionModel.js';
 import { DeliveryModel } from '../models/deliveryModel.js';
 import { ExportService } from '../services/exportService.js';
 import { config } from '../config/index.js';
+import { uploadToR2, deleteFromR2 } from '../services/r2Service.js';
 import { getDb } from '../utils/initDb.js';
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, config.storage.products),
-  filename:    (req, file, cb) => {
-    const ext  = path.extname(file.originalname);
-    const safe = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
-    cb(null, `${safe}_${uuidv4()}${ext}`);
-  },
-});
-const upload = multer({ storage, limits: { fileSize: 500 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 500 * 1024 * 1024 } });
 
 router.post('/operator/login', async (req, res) => {
   const { secret } = req.body;
@@ -53,7 +46,7 @@ router.get('/operator/products', (req, res) => {
   }
 });
 
-router.post('/operator/products', upload.single('file'), (req, res) => {
+router.post('/operator/products', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Product file is required' });
 
   const {
@@ -65,6 +58,11 @@ router.post('/operator/products', upload.single('file'), (req, res) => {
   if (!name) return res.status(400).json({ error: 'name is required' });
 
   try {
+    const ext    = path.extname(req.file.originalname);
+    const safe   = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const r2Key  = `products/${safe}_${uuidv4()}${ext}`;
+    await uploadToR2(r2Key, req.file.buffer, req.file.mimetype);
+
     const product = ProductModel.create({
       name,
       description:  description  || null,
@@ -73,7 +71,7 @@ router.post('/operator/products', upload.single('file'), (req, res) => {
       price_sol:    price_sol    ? parseFloat(price_sol)    : null,
       price_usdt:   price_usdt   ? parseFloat(price_usdt)   : null,
       price_fiat:   price_fiat   ? parseFloat(price_fiat)   : null,
-      file_path:    req.file.path,
+      file_path:    r2Key,
       version:      version      || '1.0.0',
       availability: availability !== 'false' && availability !== '0',
     });
@@ -95,13 +93,21 @@ router.patch('/operator/products/:id', (req, res) => {
   }
 });
 
-router.patch('/operator/products/:id/file', upload.single('file'), (req, res) => {
+router.patch('/operator/products/:id/file', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'New file is required' });
   const product = ProductModel.findById(req.params.id);
   if (!product) return res.status(404).json({ error: 'Product not found' });
 
   try {
-    const updated = ProductModel.update(req.params.id, { file_path: req.file.path });
+    // Delete old R2 object if it exists
+    if (product.file_path && product.file_path.startsWith('products/')) {
+      await deleteFromR2(product.file_path).catch(() => {});
+    }
+    const ext    = path.extname(req.file.originalname);
+    const safe   = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const r2Key  = `products/${safe}_${uuidv4()}${ext}`;
+    await uploadToR2(r2Key, req.file.buffer, req.file.mimetype);
+    const updated = ProductModel.update(req.params.id, { file_path: r2Key });
     res.json({ success: true, product: updated });
   } catch (err) {
     res.status(500).json({ error: err.message });

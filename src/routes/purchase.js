@@ -13,7 +13,7 @@ import { PaymentService, SUPPORTED_CURRENCIES } from '../services/paymentService
 const router = Router();
 
 router.post('/purchase/initiate', async (req, res) => {
-  const { product_id, currency, buyer_wallet } = req.body;
+  const { product_id, currency, wallet_address } = req.body;
 
   if (!product_id || !currency) {
     return res.status(400).json({ error: 'product_id and currency are required' });
@@ -33,7 +33,7 @@ router.post('/purchase/initiate', async (req, res) => {
     const { transaction, paymentAddress } = await PaymentService.initiatePurchase({
       product,
       currency,
-      buyerWallet: buyer_wallet || null,
+      buyerWallet: wallet_address || null,
     });
 
     res.status(201).json({
