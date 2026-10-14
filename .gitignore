@@ -1,0 +1,30 @@
+# Environment secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# SQLite database
+*.db
+*.sqlite
+
+# Storage directories (uploaded/fingerprinted files)
+storage/
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Patch scripts (dev tooling)
+patch_*.mjs
+
+# Local DB exports and data directory
+manifest.json
+data/
