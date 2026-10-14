@@ -8,9 +8,17 @@ import { ProductModel } from '../models/productModel.js';
 import { TransactionModel } from '../models/transactionModel.js';
 import { PaymentAddressModel } from '../models/paymentAddressModel.js';
 import { DeliveryModel } from '../models/deliveryModel.js';
-import { PaymentService, SUPPORTED_CURRENCIES } from '../services/paymentService.js';
+import { PaymentService, SUPPORTED_CURRENCIES, ENABLED_CURRENCIES } from '../services/paymentService.js';
 
 const router = Router();
+
+// "<account>?dt=<tag>" (XRP) → separate fields for the buyer; BTC passes through
+function splitAddress(stored) {
+  const x = /^(.+)\?dt=(\d+)$/.exec(stored);
+  if (x) return { payment_address: x[1], destination_tag: Number(x[2]) };
+  const o = /^(.+)\?o=[0-9a-f-]+$/i.exec(stored);          // SOL: shared wallet, unique amount
+  return { payment_address: o ? o[1] : stored };
+}
 
 router.post('/purchase/initiate', async (req, res) => {
   const { product_id, currency, wallet_address } = req.body;
@@ -19,9 +27,9 @@ router.post('/purchase/initiate', async (req, res) => {
     return res.status(400).json({ error: 'product_id and currency are required' });
   }
 
-  if (!SUPPORTED_CURRENCIES.includes(currency.toUpperCase())) {
+  if (typeof currency !== 'string' || !ENABLED_CURRENCIES.includes(currency.toUpperCase())) {
     return res.status(400).json({
-      error: `Unsupported currency. Supported: ${SUPPORTED_CURRENCIES.join(', ')}`,
+      error: `Currency not available. Accepted: ${ENABLED_CURRENCIES.join(', ')}`,
     });
   }
 
@@ -30,11 +38,24 @@ router.post('/purchase/initiate', async (req, res) => {
   if (!product.availability) return res.status(409).json({ error: 'Product is not available' });
 
   try {
-    const { transaction, paymentAddress } = await PaymentService.initiatePurchase({
+    const { transaction, paymentAddress, checkout } = await PaymentService.initiatePurchase({
       product,
       currency,
       buyerWallet: wallet_address || null,
     });
+
+    if (checkout) {
+      return res.status(201).json({
+        success:         true,
+        transaction_id:  transaction.transaction_id,
+        status:          transaction.status,
+        currency:        transaction.currency,
+        amount_expected: transaction.amount_expected,
+        checkout_url:    checkout.url,
+        expires_at:      checkout.expires_at,
+        instructions:    'Complete payment on the secure Stripe page. Your download appears here automatically.',
+      });
+    }
 
     res.status(201).json({
       success:         true,
@@ -42,14 +63,18 @@ router.post('/purchase/initiate', async (req, res) => {
       status:          transaction.status,
       currency:        transaction.currency,
       amount_expected: transaction.amount_expected,
-      payment_address: paymentAddress.address,
+      ...splitAddress(paymentAddress.address),
       expires_at:      paymentAddress.expires_at,
-      instructions:    `Send exactly ${transaction.amount_expected} ${transaction.currency} to the address above.`,
+      instructions:    transaction.currency === 'XRP'
+        ? `Send exactly ${transaction.amount_expected} XRP to the address with the DESTINATION TAG shown. Payments without the tag cannot be matched.`
+        : `Send exactly ${transaction.currency === 'SOL' ? transaction.amount_expected.toFixed(9) : transaction.amount_expected} ${transaction.currency} to the address above. The amount is unique to your order — do not round it.`,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+router.get('/payment-methods', (_req, res) => res.json({ currencies: ENABLED_CURRENCIES }));
 
 router.get('/purchase/status/:transaction_id', (req, res) => {
   try {
@@ -72,7 +97,7 @@ router.get('/purchase/status/:transaction_id', (req, res) => {
     };
 
     if (paymentAddr) {
-      response.payment_address = paymentAddr.address;
+      Object.assign(response, splitAddress(paymentAddr.address));
       response.expires_at      = paymentAddr.expires_at;
     }
 

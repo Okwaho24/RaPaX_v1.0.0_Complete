@@ -18,6 +18,16 @@ import { getDb } from '../utils/initDb.js';
 
 const router = Router();
 
+// '' / undefined → null; otherwise a finite number >= 0
+function num(v) {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`Invalid price: ${v}`);
+  return n;
+}
+const PRICE_KEYS = ['price_btc','price_eth','price_sol','price_usdt','price_fiat','price_xrp','price_cad'];
+const PATCHABLE  = ['name','description','version', ...PRICE_KEYS];
+
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 500 * 1024 * 1024 } });
 
 router.post('/operator/login', async (req, res) => {
@@ -51,11 +61,18 @@ router.post('/operator/products', upload.single('file'), async (req, res) => {
 
   const {
     name, description,
-    price_btc, price_eth, price_sol, price_usdt, price_fiat,
+    price_btc, price_eth, price_sol, price_usdt, price_fiat, price_xrp, price_cad,
     version, availability,
   } = req.body;
 
   if (!name) return res.status(400).json({ error: 'name is required' });
+  let prices;
+  try {
+    prices = {
+      price_btc: num(price_btc), price_eth: num(price_eth), price_sol: num(price_sol),
+      price_usdt: num(price_usdt), price_fiat: num(price_fiat), price_xrp: num(price_xrp), price_cad: num(price_cad),
+    };
+  } catch (e) { return res.status(400).json({ error: e.message }); }
 
   try {
     const ext    = path.extname(req.file.originalname);
@@ -66,11 +83,7 @@ router.post('/operator/products', upload.single('file'), async (req, res) => {
     const product = ProductModel.create({
       name,
       description:  description  || null,
-      price_btc:    price_btc    ? parseFloat(price_btc)    : null,
-      price_eth:    price_eth    ? parseFloat(price_eth)    : null,
-      price_sol:    price_sol    ? parseFloat(price_sol)    : null,
-      price_usdt:   price_usdt   ? parseFloat(price_usdt)   : null,
-      price_fiat:   price_fiat   ? parseFloat(price_fiat)   : null,
+      ...prices,
       file_path:    r2Key,
       version:      version      || '1.0.0',
       availability: availability !== 'false' && availability !== '0',
@@ -86,7 +99,13 @@ router.patch('/operator/products/:id', (req, res) => {
   if (!product) return res.status(404).json({ error: 'Product not found' });
 
   try {
-    const updated = ProductModel.update(req.params.id, req.body);
+    // Allowlist: file_path is NOT patchable here (use /file); availability uses /toggle.
+    const fields = {};
+    for (const k of PATCHABLE) {
+      if (!(k in req.body)) continue;
+      fields[k] = PRICE_KEYS.includes(k) ? num(req.body[k]) : String(req.body[k]);
+    }
+    const updated = ProductModel.update(req.params.id, fields);
     res.json({ success: true, product: updated });
   } catch (err) {
     res.status(400).json({ error: err.message });

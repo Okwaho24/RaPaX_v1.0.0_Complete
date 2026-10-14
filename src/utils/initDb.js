@@ -24,6 +24,13 @@ export async function initDb() {
   await openDb();
   const db = getDb();
   db.exec(SCHEMA);
+  // Migration: price_xrp (idempotent — duplicate-column error means already applied)
+  for (const col of ['price_xrp', 'price_cad']) {
+    try { db.exec(`ALTER TABLE products ADD COLUMN ${col} REAL`); }
+    catch (e) { if (!/duplicate column/i.test(e.message)) throw e; }
+  }
+  try { db.exec('ALTER TABLE transactions ADD COLUMN provider_ref TEXT'); }
+  catch (e) { if (!/duplicate column/i.test(e.message)) throw e; }
   startAutoPersist(5000);
   console.log('[RaPaX™] Database initialised ✓');
 }

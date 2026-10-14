@@ -86,6 +86,7 @@ export const config = {
     enabled:              process.env.FIAT_ENABLED === 'true',
     stripeSecretKey:      process.env.STRIPE_SECRET_KEY      || '',
     stripeWebhookSecret:  process.env.STRIPE_WEBHOOK_SECRET  || '',
+    publicBaseUrl:        process.env.PUBLIC_BASE_URL        || '',
   },
 
   r2: {

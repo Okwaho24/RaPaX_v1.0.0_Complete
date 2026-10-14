@@ -84,6 +84,7 @@ label.field{display:block;color:var(--iron);font-size:10px;letter-spacing:.06em;
 .stat{background:#0d1117;border:1px solid var(--border);border-radius:4px;padding:14px 16px}
 .stat .val{color:var(--gold);font-size:22px;font-weight:700}
 .stat .lbl{color:var(--iron);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+  .sub-note{color:var(--muted,#9a9a9a);font-size:12px;margin:6px 0 10px}
 </style>
 </head>
 <body>
@@ -124,9 +125,18 @@ label.field{display:block;color:var(--iron);font-size:10px;letter-spacing:.06em;
         <div><label class="field">Version</label><input id="p-version" placeholder="1.0.0"/></div>
       </div>
       <div class="form-row single"><label class="field">Description</label><textarea id="p-desc" rows="2" placeholder="Short description"></textarea></div>
+      <div class="sub-note">Leave a price blank to NOT offer that payment method for this product. Crypto prices are fixed amounts you set — update them if the market moves.</div>
       <div class="form-row">
-        <div><label class="field">Price (USD)</label><input id="p-price" type="number" step="0.01" placeholder="0.00"/></div>
-        <div><label class="field">Category</label><select id="p-cat"><option>software</option><option>document</option><option>template</option><option>data</option><option>other</option></select></div>
+        <div><label class="field">Card — USD</label><input id="p-usd" type="number" step="0.01" min="0.5" placeholder="e.g. 49.00"/></div>
+        <div><label class="field">Card — CAD</label><input id="p-cad" type="number" step="0.01" min="0.5"/></div>
+      </div>
+      <div class="form-row">
+        <div><label class="field">XRP</label><input id="p-xrp" type="number" step="0.000001" min="0"/></div>
+        <div><label class="field">BTC</label><input id="p-btc" type="number" step="0.00000001" min="0"/></div>
+      </div>
+      <div class="form-row">
+        <div><label class="field">SOL</label><input id="p-sol" type="number" step="0.000001" min="0"/></div>
+        <div></div>
       </div>
       <div class="form-row single"><label class="field">File</label><input id="p-file" type="file"/></div>
       <button class="btn-gold" onclick="addProduct()">+ ADD PRODUCT</button>
@@ -174,8 +184,16 @@ label.field{display:block;color:var(--iron);font-size:10px;letter-spacing:.06em;
       </div>
       <div class="form-row single"><label class="field">Description</label><textarea id="e-desc" rows="2"></textarea></div>
       <div class="form-row">
-        <div><label class="field">Price (USD)</label><input id="e-price" type="number" step="0.01"/></div>
-        <div><label class="field">Category</label><select id="e-cat"><option>software</option><option>document</option><option>template</option><option>data</option><option>other</option></select></div>
+        <div><label class="field">Card — USD</label><input id="e-usd" type="number" step="0.01" min="0.5"/></div>
+        <div><label class="field">Card — CAD</label><input id="e-cad" type="number" step="0.01" min="0.5"/></div>
+      </div>
+      <div class="form-row">
+        <div><label class="field">XRP</label><input id="e-xrp" type="number" step="0.000001" min="0"/></div>
+        <div><label class="field">BTC</label><input id="e-btc" type="number" step="0.00000001" min="0"/></div>
+      </div>
+      <div class="form-row">
+        <div><label class="field">SOL</label><input id="e-sol" type="number" step="0.000001" min="0"/></div>
+        <div></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -189,202 +207,194 @@ label.field{display:block;color:var(--iron);font-size:10px;letter-spacing:.06em;
 
 <script>
 const API = '';
-let JWT = sessionStorage.getItem('rapax_jwt') || '';
+let JWT = '';
+try { JWT = sessionStorage.getItem('rapax_jwt') || ''; } catch {}
+let catalog = [];
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hdr = () => ({ 'Authorization': 'Bearer ' + JWT, 'Content-Type': 'application/json' });
+const dt = v => v ? new Date(v).toLocaleString() : '—';
+
+async function call(path, opts = {}) {
+  const r = await fetch(API + path, opts);
+  if (r.status === 401 && JWT) { doLogout(); throw new Error('Session expired'); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Request failed (' + r.status + ')');
+  return d;
+}
 if (JWT) showShell();
 
-function hdr(){ return { 'Authorization':'Bearer '+JWT, 'Content-Type':'application/json' }; }
-
-async function doLogin(){
-  const secret = document.getElementById('secret-input').value.trim();
-  if(!secret) return;
-  try{
-    const r = await fetch(API+'/api/operator/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret})});
-    const d = await r.json();
-    if(d.token){ JWT=d.token; sessionStorage.setItem('rapax_jwt',JWT); showShell(); }
-    else{ document.getElementById('login-error').style.display='block'; }
-  }catch(e){ document.getElementById('login-error').style.display='block'; }
+async function doLogin() {
+  const secret = $('secret-input').value.trim();
+  if (!secret) return;
+  try {
+    const d = await call('/api/operator/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret }) });
+    JWT = d.token; try { sessionStorage.setItem('rapax_jwt', JWT); } catch {}
+    showShell();
+  } catch { $('login-error').style.display = 'block'; }
 }
+$('secret-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-document.getElementById('secret-input').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
-
-function showShell(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('shell').style.display='flex';
+function showShell() {
+  $('login-screen').style.display = 'none';
+  $('shell').style.display = 'flex';
   loadProducts(); loadTransactions(); loadDeliveries(); loadAudit();
 }
+function doLogout() { JWT = ''; try { sessionStorage.removeItem('rapax_jwt'); } catch {} location.reload(); }
 
-function doLogout(){
-  JWT=''; sessionStorage.removeItem('rapax_jwt');
-  location.reload();
+function switchTab(name, btn) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  $('pane-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
 }
+document.querySelectorAll('.tab-bar button[onclick^="switchTab"]').forEach(b => {
+  const n = /switchTab\('(\w+)'\)/.exec(b.getAttribute('onclick'))[1];
+  b.removeAttribute('onclick'); b.addEventListener('click', () => switchTab(n, b));
+});
 
-function switchTab(name){
-  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-bar button').forEach(b=>b.classList.remove('active'));
-  document.getElementById('pane-'+name).classList.add('active');
-  event.target.classList.add('active');
-}
-
-function toast(msg,err=false){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className=err?'err':'';
-  t.style.display='block';
-  setTimeout(()=>t.style.display='none',3000);
+function toast(msg, err = false) {
+  const t = $('toast'); t.textContent = msg; t.className = err ? 'err' : '';
+  t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3500);
 }
 
 // ── PRODUCTS ─────────────────────────────────────────────────────
-async function loadProducts(){
-  try{
-    const r=await fetch(API+'/api/products');
-    const d=await r.json();
-    const prods=d.products||d||[];
-    renderProductStats(prods);
-    renderProductTable(prods);
-  }catch(e){ document.getElementById('product-table-wrap').innerHTML='<div class="empty">Failed to load.</div>'; }
+const PRICE = [['price_fiat','USD'],['price_cad','CAD'],['price_xrp','XRP'],['price_btc','BTC'],['price_sol','SOL']];
+const priceCell = p => PRICE.filter(([k]) => p[k]).map(([k, l]) => `${esc(p[k])} ${l}`).join(' · ') || '<span class="badge badge-red">NO PRICE</span>';
+
+async function loadProducts() {
+  try {
+    const d = await call('/api/operator/products', { headers: hdr() });
+    catalog = d.products || [];
+    const live = catalog.filter(p => p.availability).length;
+    $('product-stats').innerHTML =
+      `<div class="stat"><div class="val">${catalog.length}</div><div class="lbl">Total</div></div>
+       <div class="stat"><div class="val">${live}</div><div class="lbl">Live</div></div>
+       <div class="stat"><div class="val">${catalog.length - live}</div><div class="lbl">Hidden</div></div>`;
+    if (!catalog.length) { $('product-table-wrap').innerHTML = '<div class="empty">No products yet.</div>'; return; }
+    $('product-table-wrap').innerHTML = `<table><thead><tr><th>Name</th><th>Ver</th><th>Prices</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
+      catalog.map(p => `<tr><td>${esc(p.name)}</td><td><span class="badge badge-blue">${esc(p.version)}</span></td>
+        <td class="price">${priceCell(p)}</td>
+        <td>${p.availability ? '<span class="badge badge-green">LIVE</span>' : '<span class="badge badge-red">HIDDEN</span>'}</td>
+        <td><div class="actions">
+          <button class="btn-ghost" data-act="edit" data-id="${esc(p.product_id)}">EDIT</button>
+          <button class="btn-ghost" data-act="toggle" data-id="${esc(p.product_id)}">${p.availability ? 'HIDE' : 'SHOW'}</button>
+          <button class="btn-ghost" data-act="file" data-id="${esc(p.product_id)}">REPLACE FILE</button>
+          <button class="btn-danger" data-act="del" data-id="${esc(p.product_id)}">HIDE+DEL</button>
+        </div></td></tr>`).join('')}</tbody></table>`;
+    document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => ({ edit: openEdit, toggle: toggleProduct, file: replaceFile, del: deleteProduct })[b.dataset.act](b.dataset.id));
+  } catch (e) { $('product-table-wrap').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 
-function renderProductStats(prods){
-  const avail=prods.filter(p=>p.available!==0).length;
-  document.getElementById('product-stats').innerHTML=`
-    <div class="stat"><div class="val">${prods.length}</div><div class="lbl">Total Products</div></div>
-    <div class="stat"><div class="val">${avail}</div><div class="lbl">Available</div></div>
-    <div class="stat"><div class="val">${prods.length-avail}</div><div class="lbl">Hidden</div></div>`;
+async function addProduct() {
+  const name = $('p-name').value.trim(), file = $('p-file').files[0];
+  const vals = { price_fiat: $('p-usd').value, price_cad: $('p-cad').value, price_xrp: $('p-xrp').value, price_btc: $('p-btc').value, price_sol: $('p-sol').value };
+  if (!name) return toast('Name required.', true);
+  if (!file) return toast('Product file required.', true);
+  if (!Object.values(vals).some(v => v !== '')) return toast('Set at least one price.', true);
+  const fd = new FormData();
+  fd.append('name', name);
+  fd.append('version', $('p-version').value || '1.0.0');
+  fd.append('description', $('p-desc').value);
+  for (const [k, v] of Object.entries(vals)) if (v !== '') fd.append(k, v);
+  fd.append('file', file);
+  try {
+    await call('/api/operator/products', { method: 'POST', headers: { 'Authorization': 'Bearer ' + JWT }, body: fd });
+    toast('Product added.'); loadProducts();
+    ['p-name','p-version','p-desc','p-usd','p-cad','p-xrp','p-btc','p-sol','p-file'].forEach(id => $(id).value = '');
+  } catch (e) { toast(e.message, true); }
 }
 
-function renderProductTable(prods){
-  if(!prods.length){ document.getElementById('product-table-wrap').innerHTML='<div class="empty">No products yet.</div>'; return; }
-  let rows=prods.map(p=>`
-    <tr>
-      <td>${p.name||'—'}</td>
-      <td><span class="badge badge-blue">${p.version||'—'}</span></td>
-      <td>${p.category||'—'}</td>
-      <td class="price">$${Number(p.price_usd||0).toFixed(2)}</td>
-      <td>${(p.available!==0)?'<span class="badge badge-green">LIVE</span>':'<span class="badge badge-red">HIDDEN</span>'}</td>
-      <td><div class="actions">
-        <button class="btn-ghost" onclick="openEdit(${JSON.stringify(p).replace(/"/g,'&quot;')})">EDIT</button>
-        <button class="btn-ghost" onclick="toggleProduct(${p.id},${p.available})">TOGGLE</button>
-        <button class="btn-danger" onclick="deleteProduct(${p.id})">DEL</button>
-      </div></td>
-    </tr>`).join('');
-  document.getElementById('product-table-wrap').innerHTML=`
-    <table><thead><tr><th>Name</th><th>Ver</th><th>Cat</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody>${rows}</tbody></table>`;
+function openEdit(id) {
+  const p = catalog.find(x => x.product_id === id); if (!p) return;
+  $('e-id').value = id; $('e-name').value = p.name || ''; $('e-version').value = p.version || ''; $('e-desc').value = p.description || '';
+  $('e-usd').value = p.price_fiat ?? ''; $('e-cad').value = p.price_cad ?? ''; $('e-xrp').value = p.price_xrp ?? '';
+  $('e-btc').value = p.price_btc ?? ''; $('e-sol').value = p.price_sol ?? '';
+  $('edit-modal').classList.add('open');
+}
+function closeModal() { $('edit-modal').classList.remove('open'); }
+
+async function saveEdit() {
+  const body = { name: $('e-name').value, version: $('e-version').value, description: $('e-desc').value,
+    price_fiat: $('e-usd').value, price_cad: $('e-cad').value, price_xrp: $('e-xrp').value, price_btc: $('e-btc').value, price_sol: $('e-sol').value };
+  try {
+    await call('/api/operator/products/' + encodeURIComponent($('e-id').value), { method: 'PATCH', headers: hdr(), body: JSON.stringify(body) });
+    toast('Saved.'); closeModal(); loadProducts();
+  } catch (e) { toast(e.message, true); }
 }
 
-async function addProduct(){
-  const name=document.getElementById('p-name').value.trim();
-  const price=document.getElementById('p-price').value;
-  const file=document.getElementById('p-file').files[0];
-  if(!name||!price){ toast('Name and price required.',true); return; }
-  const fd=new FormData();
-  fd.append('name',name);
-  fd.append('version',document.getElementById('p-version').value||'1.0.0');
-  fd.append('description',document.getElementById('p-desc').value);
-  fd.append('price_usd',price);
-  fd.append('category',document.getElementById('p-cat').value);
-  if(file) fd.append('file',file);
-  try{
-    const r=await fetch(API+'/api/operator/products',{method:'POST',headers:{'Authorization':'Bearer '+JWT},body:fd});
-    const d=await r.json();
-    if(r.ok){ toast('Product added.'); loadProducts(); ['p-name','p-version','p-desc','p-price'].forEach(id=>document.getElementById(id).value=''); }
-    else toast(d.error||'Failed.',true);
-  }catch(e){ toast('Network error.',true); }
+async function toggleProduct(id) {
+  try { await call('/api/operator/products/' + encodeURIComponent(id) + '/toggle', { method: 'PATCH', headers: hdr() }); loadProducts(); }
+  catch (e) { toast(e.message, true); }
 }
 
-function openEdit(p){
-  document.getElementById('e-id').value=p.id;
-  document.getElementById('e-name').value=p.name||'';
-  document.getElementById('e-version').value=p.version||'';
-  document.getElementById('e-desc').value=p.description||'';
-  document.getElementById('e-price').value=p.price_usd||'';
-  document.getElementById('e-cat').value=p.category||'software';
-  document.getElementById('edit-modal').classList.add('open');
+function replaceFile(id) {
+  const inp = document.createElement('input'); inp.type = 'file';
+  inp.onchange = async () => {
+    if (!inp.files[0]) return;
+    const fd = new FormData(); fd.append('file', inp.files[0]);
+    try { await call('/api/operator/products/' + encodeURIComponent(id) + '/file', { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + JWT }, body: fd }); toast('File replaced.'); loadProducts(); }
+    catch (e) { toast(e.message, true); }
+  };
+  inp.click();
 }
 
-function closeModal(){ document.getElementById('edit-modal').classList.remove('open'); }
-
-async function saveEdit(){
-  const id=document.getElementById('e-id').value;
-  const body={name:document.getElementById('e-name').value,version:document.getElementById('e-version').value,description:document.getElementById('e-desc').value,price_usd:document.getElementById('e-price').value,category:document.getElementById('e-cat').value};
-  try{
-    const r=await fetch(API+'/api/operator/products/'+id,{method:'PATCH',headers:hdr(),body:JSON.stringify(body)});
-    const d=await r.json();
-    if(r.ok){ toast('Saved.'); closeModal(); loadProducts(); }
-    else toast(d.error||'Failed.',true);
-  }catch(e){ toast('Network error.',true); }
-}
-
-async function toggleProduct(id,cur){
-  try{
-    const r=await fetch(API+'/api/operator/products/'+id,{method:'PATCH',headers:hdr(),body:JSON.stringify({available:cur?0:1})});
-    if(r.ok){ toast('Toggled.'); loadProducts(); }
-    else toast('Failed.',true);
-  }catch(e){ toast('Error.',true); }
-}
-
-async function deleteProduct(id){
-  if(!confirm('Delete this product? This cannot be undone.')) return;
-  try{
-    const r=await fetch(API+'/api/operator/products/'+id,{method:'DELETE',headers:hdr()});
-    if(r.ok){ toast('Deleted.'); loadProducts(); }
-    else toast('Failed.',true);
-  }catch(e){ toast('Error.',true); }
+async function deleteProduct(id) {
+  if (!confirm('Hide this product from the store? (Orders and history are kept.)')) return;
+  try { await call('/api/operator/products/' + encodeURIComponent(id), { method: 'DELETE', headers: hdr() }); toast('Hidden.'); loadProducts(); }
+  catch (e) { toast(e.message, true); }
 }
 
 // ── TRANSACTIONS ────────────────────────────────────────────────
-async function loadTransactions(){
-  try{
-    const r=await fetch(API+'/api/operator/transactions',{headers:hdr()});
-    const d=await r.json();
-    const txs=d.transactions||d||[];
-    if(!txs.length){ document.getElementById('tx-table-wrap').innerHTML='<div class="empty">No transactions yet.</div>'; return; }
-    let rows=txs.map(t=>`<tr>
-      <td class="mono">${t.id}</td>
-      <td>${t.product_name||t.product_id||'—'}</td>
-      <td class="price">$${Number(t.amount_usd||0).toFixed(2)}</td>
-      <td><span class="badge badge-yellow">${t.currency||'—'}</span></td>
-      <td><span class="badge ${t.status==='confirmed'?'badge-green':t.status==='pending'?'badge-yellow':'badge-red'}">${(t.status||'').toUpperCase()}</span></td>
-      <td class="mono" style="font-size:10px">${t.buyer_email||'—'}</td>
-      <td style="font-size:10px">${t.created_at?new Date(t.created_at).toLocaleString():'—'}</td>
-    </tr>`).join('');
-    document.getElementById('tx-table-wrap').innerHTML=`<table><thead><tr><th>ID</th><th>Product</th><th>USD</th><th>Coin</th><th>Status</th><th>Buyer</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }catch(e){ document.getElementById('tx-table-wrap').innerHTML='<div class="empty">Failed to load.</div>'; }
+async function loadTransactions() {
+  try {
+    const d = await call('/api/operator/transactions?limit=200', { headers: hdr() });
+    const txs = d.transactions || [];
+    if (!txs.length) { $('tx-table-wrap').innerHTML = '<div class="empty">No transactions yet.</div>'; return; }
+    const name = id => (catalog.find(p => p.product_id === id) || {}).name || id;
+    const cls = s => ['confirmed','fingerprinting','delivering','complete'].includes(s) ? 'badge-green' : ['pending','confirming'].includes(s) ? 'badge-yellow' : 'badge-red';
+    $('tx-table-wrap').innerHTML = `<table><thead><tr><th>Order</th><th>Product</th><th>Expected</th><th>Received</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>${
+      txs.map(t => `<tr><td class="mono" style="font-size:10px">${esc(t.transaction_id)}</td><td>${esc(name(t.product_id))}</td>
+        <td class="price">${esc(t.amount_expected)} ${esc(t.currency)}</td><td>${t.amount_received ?? '—'}</td>
+        <td><span class="badge ${cls(t.status)}">${esc(String(t.status).toUpperCase())}</span></td><td style="font-size:10px">${dt(t.created_at)}</td>
+        <td>${['pending','confirming','failed','expired'].includes(t.status) ? `<button class="btn-ghost" data-conf="${esc(t.transaction_id)}">MARK PAID</button>` : ''}</td></tr>`).join('')}</tbody></table>`;
+    document.querySelectorAll('[data-conf]').forEach(b => b.onclick = () => manualConfirm(b.dataset.conf));
+  } catch (e) { $('tx-table-wrap').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+async function manualConfirm(id) {
+  const hash = prompt('Verify the payment yourself first (Stripe dashboard / explorer).\nPaste the payment reference / tx hash to mark this order PAID and deliver:');
+  if (hash === null) return;
+  try {
+    await call('/api/internal/payment/confirm', { method: 'POST', headers: hdr(), body: JSON.stringify({ transaction_id: id, tx_hash: hash.trim() || null }) });
+    toast('Marked paid. Delivery started.'); setTimeout(loadTransactions, 1500);
+  } catch (e) { toast(e.message, true); }
 }
 
 // ── DELIVERIES ──────────────────────────────────────────────────
-async function loadDeliveries(){
-  try{
-    const r=await fetch(API+'/api/operator/deliveries',{headers:hdr()});
-    const d=await r.json();
-    const dels=d.deliveries||d||[];
-    if(!dels.length){ document.getElementById('del-table-wrap').innerHTML='<div class="empty">No deliveries yet.</div>'; return; }
-    let rows=dels.map(d=>`<tr>
-      <td class="mono">${d.id}</td>
-      <td>${d.product_name||d.product_id||'—'}</td>
-      <td class="mono" style="font-size:10px">${d.buyer_email||'—'}</td>
-      <td><span class="badge ${d.status==='delivered'?'badge-green':'badge-yellow'}">${(d.status||'').toUpperCase()}</span></td>
-      <td style="font-size:10px">${d.delivered_at?new Date(d.delivered_at).toLocaleString():'—'}</td>
-    </tr>`).join('');
-    document.getElementById('del-table-wrap').innerHTML=`<table><thead><tr><th>ID</th><th>Product</th><th>Buyer</th><th>Status</th><th>Delivered</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }catch(e){ document.getElementById('del-table-wrap').innerHTML='<div class="empty">Failed to load.</div>'; }
+async function loadDeliveries() {
+  try {
+    const d = await call('/api/operator/deliveries', { headers: hdr() });
+    const rows = d.deliveries || [];
+    if (!rows.length) { $('del-table-wrap').innerHTML = '<div class="empty">No deliveries yet.</div>'; return; }
+    $('del-table-wrap').innerHTML = `<table><thead><tr><th>Order</th><th>Status</th><th>Downloads</th><th>Expires</th><th>Created</th></tr></thead><tbody>${
+      rows.map(x => `<tr><td class="mono" style="font-size:10px">${esc(x.transaction_id)}</td><td><span class="badge badge-blue">${x.downloaded_at ? 'DOWNLOADED' : 'ISSUED'}</span></td>
+        <td>${esc(x.download_count ?? 0)}</td><td style="font-size:10px">${dt(x.expires_at)}</td><td style="font-size:10px">${dt(x.created_at)}</td></tr>`).join('')}</tbody></table>`;
+  } catch (e) { $('del-table-wrap').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 
 // ── AUDIT LOG ───────────────────────────────────────────────────
-async function loadAudit(){
-  try{
-    const r=await fetch(API+'/api/operator/audit',{headers:hdr()});
-    const d=await r.json();
-    const logs=d.logs||d||[];
-    if(!logs.length){ document.getElementById('audit-table-wrap').innerHTML='<div class="empty">No audit entries yet.</div>'; return; }
-    let rows=logs.map(l=>`<tr>
-      <td style="font-size:10px">${l.created_at?new Date(l.created_at).toLocaleString():'—'}</td>
-      <td><span class="badge badge-blue">${l.action||'—'}</span></td>
-      <td class="mono" style="font-size:10px">${l.actor||'—'}</td>
-      <td style="font-size:11px">${l.detail||'—'}</td>
-    </tr>`).join('');
-    document.getElementById('audit-table-wrap').innerHTML=`<table><thead><tr><th>Time</th><th>Action</th><th>Actor</th><th>Detail</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }catch(e){ document.getElementById('audit-table-wrap').innerHTML='<div class="empty">Failed to load.</div>'; }
+async function loadAudit() {
+  try {
+    const d = await call('/api/operator/logs?limit=200', { headers: hdr() });
+    const logs = d.logs || [];
+    if (!logs.length) { $('audit-table-wrap').innerHTML = '<div class="empty">No audit entries yet.</div>'; return; }
+    $('audit-table-wrap').innerHTML = `<table><thead><tr><th>Time</th><th>Type</th><th>Actor</th><th>Detail</th></tr></thead><tbody>${
+      logs.map(l => `<tr><td style="font-size:10px">${dt(l.created_at)}</td><td><span class="badge badge-blue">${esc(l.event_type)}</span></td>
+        <td class="mono" style="font-size:10px">${esc(l.actor)}</td><td style="font-size:11px;word-break:break-all">${esc(l.payload)}</td></tr>`).join('')}</tbody></table>`;
+  } catch (e) { $('audit-table-wrap').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
+window.doLogin = doLogin; window.doLogout = doLogout; window.addProduct = addProduct; window.saveEdit = saveEdit; window.closeModal = closeModal;
 </script>
 </body>
 </html>

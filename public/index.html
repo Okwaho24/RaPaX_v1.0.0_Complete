@@ -3,381 +3,256 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RaPaX™ — Sovereign Digital Products</title>
+<title>RaPaX™ — Sovereign Digital Vending</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --black: #0a0a0a;
-    --black2: #111111;
-    --black3: #1a1a1a;
-    --gold: #c9a84c;
-    --gold2: #e8c96a;
-    --gold3: #f5e199;
-    --white: #f0ece4;
-    --white2: #d4cfc6;
-    --red: #c0392b;
-    --green: #27ae60;
-    --radius: 6px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.7);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--black);
-    color: var(--white);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    min-height: 100vh;
-  }
-  a { color: var(--gold); text-decoration: none; }
-
-  /* NAV */
-  nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 2rem; height: 64px;
-    background: var(--black2);
-    border-bottom: 1px solid var(--gold);
-    position: sticky; top: 0; z-index: 100;
-  }
-  .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
-  .logo span { color: var(--white2); font-weight: 300; }
-  nav a { font-size: 0.85rem; color: var(--white2); margin-left: 1.5rem; }
-  nav a:hover { color: var(--gold); }
-
-  /* HERO */
-  .hero {
-    text-align: center; padding: 5rem 2rem 3rem;
-    background: linear-gradient(180deg, var(--black2) 0%, var(--black) 100%);
-  }
-  .hero h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 900; letter-spacing: 3px;
-    color: var(--gold);
-    text-shadow: 0 0 40px rgba(201,168,76,0.3);
-  }
-  .hero p { color: var(--white2); margin-top: 1rem; font-size: 1.05rem; }
-
-  /* CATALOG */
-  .catalog { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
-  .catalog h2 {
-    font-size: 1.1rem; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--gold2); border-bottom: 1px solid #333; padding-bottom: 0.75rem;
-    margin-bottom: 2rem;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-  }
-  .card {
-    background: var(--black2);
-    border: 1px solid #2a2a2a;
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-  }
-  .card:hover { border-color: var(--gold); box-shadow: 0 0 20px rgba(201,168,76,0.15); }
-  .card-badge {
-    display: inline-block; font-size: 0.7rem; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    background: var(--gold); color: var(--black);
-    padding: 2px 8px; border-radius: 3px; margin-bottom: 0.75rem;
-  }
-  .card h3 { font-size: 1.05rem; margin-bottom: 0.5rem; }
-  .card p { font-size: 0.85rem; color: var(--white2); line-height: 1.6; min-height: 3.2rem; }
-  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; }
-  .price { font-size: 0.8rem; color: var(--gold2); }
-  .price strong { font-size: 1rem; color: var(--gold); }
-  .btn {
-    display: inline-block; padding: 0.5rem 1.2rem;
-    background: var(--gold); color: var(--black);
-    font-weight: 700; font-size: 0.8rem; letter-spacing: 1px;
-    border: none; border-radius: var(--radius); cursor: pointer;
-    transition: background 0.15s;
-  }
-  .btn:hover { background: var(--gold2); }
-  .btn-outline {
-    background: transparent; color: var(--gold);
-    border: 1px solid var(--gold);
-  }
-  .btn-outline:hover { background: rgba(201,168,76,0.1); }
-
-  /* LOADING */
-  .loading { text-align: center; padding: 4rem; color: var(--white2); }
-  .spinner {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 3px solid #333; border-top-color: var(--gold);
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto 1rem;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* MODAL */
-  .modal-bg {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85); z-index: 200;
-    align-items: center; justify-content: center;
-  }
-  .modal-bg.open { display: flex; }
-  .modal {
-    background: var(--black2); border: 1px solid var(--gold);
-    border-radius: var(--radius); padding: 2rem;
-    width: min(560px, 96vw); max-height: 90vh; overflow-y: auto;
-    box-shadow: var(--shadow);
-  }
-  .modal h2 { color: var(--gold); font-size: 1.2rem; margin-bottom: 1.5rem; }
-  .form-row { margin-bottom: 1.25rem; }
-  .form-row label { display: block; font-size: 0.8rem; color: var(--white2); margin-bottom: 0.4rem; letter-spacing: 1px; }
-  .form-row input, .form-row select, .form-row textarea {
-    width: 100%; padding: 0.65rem 0.85rem;
-    background: var(--black3); border: 1px solid #333;
-    border-radius: var(--radius); color: var(--white);
-    font-size: 0.9rem; font-family: inherit;
-  }
-  .form-row input:focus, .form-row select:focus {
-    outline: none; border-color: var(--gold);
-  }
-  .crypto-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-  .tab-btn {
-    padding: 0.4rem 0.9rem; font-size: 0.78rem; font-weight: 600;
-    border: 1px solid #333; border-radius: 4px;
-    background: transparent; color: var(--white2); cursor: pointer;
-  }
-  .tab-btn.active { background: var(--gold); color: var(--black); border-color: var(--gold); }
-  .pay-panel { display: none; }
-  .pay-panel.active { display: block; }
-  .wallet-addr {
-    background: var(--black3); border: 1px dashed #444;
-    border-radius: 4px; padding: 0.75rem;
-    font-family: monospace; font-size: 0.8rem;
-    word-break: break-all; color: var(--gold2);
-    margin-bottom: 0.75rem;
-  }
-  .copy-btn { font-size: 0.75rem; cursor: pointer; color: var(--gold); background: none; border: none; }
-  .modal-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
-  .close-btn { position: absolute; top: 1rem; right: 1.25rem; background: none; border: none; color: var(--white2); font-size: 1.5rem; cursor: pointer; }
-
-  /* TOAST */
-  #toast {
-    position: fixed; bottom: 2rem; right: 2rem;
-    background: var(--black2); border: 1px solid var(--gold);
-    color: var(--white); padding: 0.75rem 1.25rem;
-    border-radius: var(--radius); font-size: 0.88rem;
-    opacity: 0; transition: opacity 0.3s;
-    z-index: 999; max-width: 320px;
-  }
-  #toast.show { opacity: 1; }
-
-  /* EMAIL FORM */
-  .email-row { display: flex; gap: 0.5rem; margin-bottom: 0.25rem; }
-  .email-row input { flex: 1; }
-
-  /* FOOTER */
-  footer {
-    text-align: center; padding: 2rem;
-    color: #555; font-size: 0.8rem;
-    border-top: 1px solid #1a1a1a; margin-top: 4rem;
-  }
-  footer span { color: var(--gold); }
+  :root{--onyx:#0a0a0a;--onyx2:#121416;--onyx3:#1b1e21;--steel:#2a2e33;--gold:#c9a84c;--gold2:#e8c96a;--white:#fff;--mute:#a9a69c;--line:#2c3036;--ok:#3ea46b;--bad:#d4574a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:radial-gradient(1200px 500px at 50% 0,#1a1c1f 0,var(--onyx) 70%);color:var(--white);font:16px/1.5 Inter,system-ui,sans-serif;min-height:100vh;padding:20px 16px 0}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+  .machine{max-width:1020px;margin:0 auto;background:linear-gradient(180deg,#1d2024,#121416);border:1px solid #3a3f46;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden}
+  .marquee{background:#0c0d0e;text-align:center;padding:14px 12px 12px;border-bottom:1px solid #3a3f46}
+  .marquee h1{font:600 clamp(2rem,7vw,3.1rem)/1.1 Inter,sans-serif;letter-spacing:.04em;color:var(--gold2);text-shadow:0 0 18px rgba(232,201,106,.55),0 0 2px rgba(255,230,150,.9)}
+  .marquee h1 sup{font-size:.4em;vertical-align:top;margin-left:2px}
+  .marquee p{color:var(--mute);font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;margin-top:4px}
+  .body{display:grid;grid-template-columns:1fr 250px;gap:14px;padding:14px}
+  @media (max-width:760px){.body{grid-template-columns:1fr}}
+  .bay{background:#0a0b0c;border:2px solid #000;border-radius:8px;box-shadow:inset 0 0 0 1px #2c3036,inset 0 8px 30px rgba(0,0,0,.6)}
+  .board{padding:14px 16px;border-bottom:1px solid #1f2327;display:grid;grid-template-columns:1fr 1fr;gap:4px 28px;font:400 .78rem/1.65 'JetBrains Mono',monospace;color:#c8d0d8}
+  @media (max-width:520px){.board{grid-template-columns:1fr}}
+  .board h2{grid-column:1/-1;font:500 .7rem 'JetBrains Mono',monospace;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;margin-bottom:2px}
+  .board .it{display:flex;justify-content:space-between;gap:10px}
+  .board .it b{color:var(--white);font-weight:500;white-space:nowrap}
+  .board .it span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .shelves{padding:10px 10px 4px}
+  .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px 4px 12px;border-bottom:5px solid #23272c;margin-bottom:6px}
+  .slot{position:relative;background:linear-gradient(180deg,#16191c,#0f1113);border:1px solid #2a2e33;border-radius:6px;padding:12px 10px 10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:150px;text-align:left;color:var(--white);font:inherit;transition:border-color .15s,transform .15s}
+  .slot:hover,.slot:focus-visible{border-color:var(--gold);transform:translateY(-2px);outline:none}
+  .slot .num{position:absolute;top:16px;right:16px;z-index:2;background:rgba(0,0,0,.72);padding:1px 6px;border-radius:3px;font:500 .72rem 'JetBrains Mono',monospace;color:var(--gold2)}
+  .slot .box{height:54px;border-radius:3px;background:linear-gradient(135deg,#d9dde3,#8f98a3);box-shadow:inset 0 0 0 2px rgba(0,0,0,.25);position:relative}
+  .slot:nth-child(3n+2) .box{background:linear-gradient(135deg,#2d3440,#12151a);box-shadow:inset 0 0 0 2px #3d4655}
+  .slot:nth-child(3n) .box{background:linear-gradient(135deg,#e8c96a,#a98a32)}
+  .slot .box::after{content:'';position:absolute;left:8px;right:8px;top:10px;height:3px;background:rgba(0,0,0,.35);box-shadow:0 8px 0 rgba(0,0,0,.25),0 16px 0 rgba(0,0,0,.18)}
+  .slot h3{font:600 .88rem/1.25 Inter,sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .slot .pr{margin-top:auto;font:400 .72rem/1.5 'JetBrains Mono',monospace;color:var(--mute)}
+  .slot .pr b{color:var(--gold2);font-weight:500}
+  .plate{margin:8px 10px 12px;background:#14171a;border:1px solid #2a2e33;border-radius:8px;padding:10px;text-align:center;font:400 .72rem 'JetBrains Mono',monospace;color:var(--mute);letter-spacing:.06em}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .terminal{background:#0b0e10;border:2px solid #000;border-radius:8px;padding:12px;box-shadow:inset 0 0 0 1px #2c3036}
+  .screen{background:#0f1a14;border:1px solid #22382b;border-radius:4px;padding:10px;min-height:76px;font:400 .8rem/1.5 'JetBrains Mono',monospace;color:#8fe0b0}
+  .screen .big{font-size:1.5rem;color:#b9f3cf;letter-spacing:.2em;min-height:2rem}
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+  .key{background:#1d2126;border:1px solid #333a42;border-radius:5px;color:var(--white);font:500 1.05rem 'JetBrains Mono',monospace;min-height:48px;cursor:pointer}
+  .key:hover{border-color:var(--gold)} .key:active{background:#262b31}
+  .key.go{background:var(--gold);color:var(--onyx);border-color:var(--gold);font-weight:600}
+  .key.clr{color:var(--bad)}
+  .pay{background:#14171a;border:1px solid #2a2e33;border-radius:8px;padding:12px;font-size:.78rem;color:var(--mute);line-height:1.55}
+  .pay b{color:var(--white);font-weight:500}
+  .btn{background:var(--gold);color:var(--onyx);border:0;border-radius:6px;padding:.8rem 1.1rem;font:600 .95rem Inter,sans-serif;cursor:pointer;min-height:44px}
+  .btn:hover{background:var(--gold2)} .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--white);border:1px solid var(--line)} .btn.ghost:hover{border-color:var(--gold)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:1rem;z-index:50}
+  .modal.open{display:flex}
+  .sheet{background:var(--onyx2);border:1px solid var(--gold);border-radius:10px;width:100%;max-width:520px;max-height:92vh;overflow:auto;padding:1.5rem}
+  .sheet h2{font:1.5rem 'DM Serif Display',serif;font-weight:400;color:var(--gold);margin-bottom:.25rem}
+  .sub{color:var(--mute);font-size:.9rem;margin-bottom:1rem}
+  .methods{display:grid;gap:.6rem;margin:1rem 0}
+  .method{display:flex;justify-content:space-between;align-items:center;background:var(--onyx3);border:1px solid var(--line);border-radius:6px;padding:.9rem 1rem;cursor:pointer;color:var(--white);font:500 1rem Inter,sans-serif;text-align:left;min-height:48px}
+  .method:hover{border-color:var(--gold)}
+  .field{background:var(--onyx3);border:1px solid var(--line);border-radius:6px;padding:.7rem .9rem;margin:.5rem 0}
+  .field label{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+  .field .v{word-break:break-all;font:500 .95rem 'JetBrains Mono',monospace;margin:.2rem 0 .4rem}
+  .field button{font-size:.8rem;background:none;border:1px solid var(--line);color:var(--gold);border-radius:4px;padding:.3rem .6rem;cursor:pointer}
+  .warn{border:1px solid var(--gold);background:#1c1708;border-radius:6px;padding:.7rem .9rem;font-size:.9rem;margin:.6rem 0}
+  .status{margin:1rem 0;padding:.8rem 1rem;border-radius:6px;background:var(--onyx3);font-size:.95rem}
+  .status.ok{border:1px solid var(--ok)} .status.bad{border:1px solid var(--bad)}
+  .row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+  .loading{color:var(--mute);text-align:center;padding:2.5rem 0;grid-column:1/-1;font:400 .85rem 'JetBrains Mono',monospace}
+  footer{color:var(--mute);text-align:center;padding:22px 12px 26px;font-size:.8rem}
+  #toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--onyx);padding:.6rem 1.1rem;border-radius:6px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}
+  #toast.show{opacity:1}
 </style>
 </head>
 <body>
-
-<nav>
-  <div class="logo">RaPaX<span>™</span></div>
-  <div>
-    <a href="/operator/">Operator</a>
-    <a href="#catalog">Catalog</a>
-  </div>
-</nav>
-
-<div class="hero">
-  <h1>SOVEREIGN DIGITAL PRODUCTS</h1>
-  <p>Crypto-native. Privacy-first. Instant delivery.</p>
-</div>
-
-<div class="catalog" id="catalog">
-  <h2>Available Products</h2>
-  <div id="grid" class="grid">
-    <div class="loading"><div class="spinner"></div>Loading catalog…</div>
-  </div>
-</div>
-
-<!-- Purchase Modal -->
-<div class="modal-bg" id="modal">
-  <div class="modal" style="position:relative">
-    <button class="close-btn" onclick="closeModal()">×</button>
-    <h2 id="modal-title">Purchase</h2>
-
-    <div class="form-row">
-      <label>DELIVERY EMAIL</label>
-      <div class="email-row">
-        <input type="email" id="buyer-email" placeholder="you@example.com"/>
+<div class="machine">
+  <div class="marquee"><h1>RaPaX<sup>™</sup></h1><p>Sovereign Digital Vending</p></div>
+  <div class="body">
+    <div class="bay">
+      <div class="board" id="board"><h2>Now vending</h2><div class="loading" style="grid-column:1/-1">Initialising…</div></div>
+      <div class="shelves"><div class="shelf" id="grid"><div class="loading">Loading catalog…</div></div></div>
+      <div class="plate">Contents protected by AcerbE™</div>
+    </div>
+    <div class="side">
+      <div class="terminal">
+        <div class="screen" id="screen"><div>SELECT A SLOT</div><div class="big mono" id="code">&nbsp;</div></div>
+        <div class="keys" id="keys"></div>
       </div>
-    </div>
-
-    <div class="form-row">
-      <label>SELECT PAYMENT RAIL</label>
-      <div class="crypto-tabs" id="crypto-tabs"></div>
-    </div>
-
-    <div id="pay-panels"></div>
-
-    <div class="form-row" id="amount-row">
-      <label>AMOUNT DUE</label>
-      <div class="wallet-addr" id="amount-display">—</div>
-    </div>
-
-    <div class="form-row">
-      <label>SEND TO WALLET</label>
-      <div class="wallet-addr" id="wallet-display">Select a payment method above</div>
-      <button class="copy-btn" onclick="copyWallet()">⎘ Copy address</button>
-    </div>
-
-    <div class="form-row">
-      <label>TRANSACTION ID / TX HASH</label>
-      <input type="text" id="tx-hash" placeholder="Paste your transaction hash here"/>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn" onclick="submitOrder()">CONFIRM PAYMENT</button>
-      <button class="btn btn-outline" onclick="closeModal()">CANCEL</button>
+      <div class="pay" id="payinfo">Loading payment options…</div>
     </div>
   </div>
 </div>
-
-<div id="toast"></div>
-
-<footer>
-  &copy; 2026 <span>RaPaX™</span> — All rights reserved. Sovereign Infrastructure.
-</footer>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div id="toast" role="status"></div>
+<footer>&copy; 2026 RaPaX™ — Archer Chain Analytics</footer>
 
 <script>
-const API = '';
-let products = [];
-let selectedProduct = null;
-let selectedCoin = null;
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const METHODS = {
+  USD: { label: 'Card (USD)', field: 'price_fiat', fmt: v => `$${Number(v).toFixed(2)} USD` },
+  CAD: { label: 'Card (CAD)', field: 'price_cad',  fmt: v => `$${Number(v).toFixed(2)} CAD` },
+  XRP: { label: 'XRP',        field: 'price_xrp',  fmt: v => `${v} XRP` },
+  BTC: { label: 'Bitcoin',    field: 'price_btc',  fmt: v => `${v} BTC` },
+  SOL: { label: 'Solana',     field: 'price_sol',  fmt: v => `${v} SOL` },
+};
+let products = [], items = [], enabled = [], poll = null, current = null;
 
-const COINS = [
-  { key: 'btc',  label: 'BTC',  field: 'price_btc' },
-  { key: 'eth',  label: 'ETH',  field: 'price_eth' },
-  { key: 'sol',  label: 'SOL',  field: 'price_sol' },
-  { key: 'usdt', label: 'USDT', field: 'price_usdt' },
-];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); };
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} },
+};
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || `Request failed (${r.status})`);
+  return d;
+}
+const methodsFor = p => enabled.filter(m => METHODS[m] && p[METHODS[m].field]);
 
-async function loadProducts() {
+async function load() {
   try {
-    const r = await fetch(`${API}/api/products`);
-    const data = await r.json();
-    products = data.products || data || [];
-    renderGrid();
-  } catch(e) {
-    document.getElementById('grid').innerHTML = '<div class="loading">Failed to load catalog.</div>';
-  }
+    const [pm, pr] = await Promise.all([api('/api/payment-methods'), api('/api/products')]);
+    enabled = pm.currencies || [];
+    products = (pr.products || pr || []).filter(p => p.availability !== 0 && p.availability !== false);
+    render();
+  } catch { $('grid').innerHTML = '<div class="loading">Machine offline. Please retry shortly.</div>'; $('board').innerHTML = ''; $('payinfo').textContent = 'Offline.'; }
+  const q = new URLSearchParams(location.search);
+  const id = q.get('order') || store.get('rapax_order');
+  if (id && /^[0-9a-f-]{36}$/i.test(id)) track(id);
+  if (q.get('cancelled')) { toast('Payment cancelled'); history.replaceState(null, '', '/'); }
 }
 
-function renderGrid() {
-  const grid = document.getElementById('grid');
-  const avail = products.filter(p => p.availability !== false && p.availability !== 0);
-  if (!avail.length) {
-    grid.innerHTML = '<div class="loading" style="color:#555">No products available yet.</div>';
-    return;
-  }
-  grid.innerHTML = avail.map(p => `
-    <div class="card" onclick="openModal('${p.product_id}')">
-      <div class="card-badge">v${p.version || '1.0'}</div>
+function render() {
+  items = products.filter(p => methodsFor(p).length);
+  const pad = i => String(i + 1).padStart(2, '0');
+  $('board').innerHTML = '<h2>Now vending</h2>' + (items.length
+    ? items.map((p, i) => `<div class="it"><span>${pad(i)} ${esc(p.name)}</span><b>${esc(headline(p))}</b></div>`).join('')
+    : '<div class="loading" style="grid-column:1/-1">No products available right now.</div>');
+  $('grid').innerHTML = items.length ? items.map((p, i) => `
+    <button class="slot" data-buy="${esc(p.product_id)}" aria-label="Select slot ${pad(i)}: ${esc(p.name)}">
+      <span class="num">${pad(i)}</span><div class="box"></div>
       <h3>${esc(p.name)}</h3>
-      <p>${esc(p.description || '')}</p>
-      <div class="card-footer">
-        <div class="price">
-          ${p.price_btc ? `<strong>${p.price_btc}</strong> BTC` : ''}
-          ${p.price_usdt ? ` · <strong>${p.price_usdt}</strong> USDT` : ''}
-        </div>
-        <button class="btn" onclick="event.stopPropagation();openModal('${p.product_id}')">BUY</button>
-      </div>
-    </div>
-  `).join('');
+      <div class="pr">${methodsFor(p).map(m => `<div><b>${esc(METHODS[m].fmt(p[METHODS[m].field]))}</b></div>`).join('')}</div>
+    </button>`).join('')
+    : '<div class="loading">Machine is being restocked.</div>';
+  document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => choose(b.dataset.buy));
+  const labels = enabled.map(m => METHODS[m]?.label).filter(Boolean);
+  $('payinfo').innerHTML = labels.length
+    ? `<b>Accepted</b><br>${labels.map(esc).join(' · ')}<br><br>Pick a slot, choose how to pay, and your personal, fingerprinted copy is delivered here the moment payment clears.`
+    : 'Payments are temporarily unavailable.';
+}
+const headline = p => { const m = methodsFor(p)[0]; return m ? METHODS[m].fmt(p[METHODS[m].field]) : ''; };
+
+// ── keypad ──
+let buf = '';
+function setScreen(top, code) { $('screen').firstElementChild.textContent = top; $('code').innerHTML = esc(code) || '&nbsp;'; }
+function key(k) {
+  if (k === 'C') buf = '';
+  else if (k === 'OK') {
+    const p = items[Number(buf) - 1];
+    if (!buf || !p) { setScreen('NO SUCH SLOT', buf); buf = ''; return; }
+    const chosen = p.product_id; buf = ''; setScreen('SELECT A SLOT', ''); return choose(chosen);
+  } else if (buf.length < 2) buf += k;
+  setScreen(buf ? 'SLOT NUMBER' : 'SELECT A SLOT', buf);
+}
+$('keys').innerHTML = ['1','2','3','4','5','6','7','8','9','C','0','OK'].map(k =>
+  `<button class="key ${k === 'OK' ? 'go' : k === 'C' ? 'clr' : ''}" data-k="${k}">${k}</button>`).join('');
+document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => key(b.dataset.k));
+
+function open(html) { $('sheet').innerHTML = html; $('modal').classList.add('open'); }
+function close() { $('modal').classList.remove('open'); clearInterval(poll); poll = null; }
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) close(); });
+
+function choose(pid) {
+  const p = products.find(x => x.product_id === pid); if (!p) return;
+  const ms = methodsFor(p);
+  open(`<h2>${esc(p.name)}</h2><div class="sub">Choose how to pay</div>
+    <div class="methods">${ms.map(m => `<button class="method" data-pay="${m}"><span>${esc(METHODS[m].label)}</span><strong>${esc(METHODS[m].fmt(p[METHODS[m].field]))}</strong></button>`).join('')}</div>
+    <div class="row"><button class="btn ghost" id="x">Cancel</button></div>`);
+  $('x').onclick = close;
+  document.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => start(p, b.dataset.pay, b));
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function openModal(id) {
-  selectedProduct = products.find(p => p.product_id === id);
-  if (!selectedProduct) return;
-  document.getElementById('modal-title').textContent = selectedProduct.name;
-  document.getElementById('tx-hash').value = '';
-  document.getElementById('buyer-email').value = '';
-
-  // Build tabs
-  const tabs = document.getElementById('crypto-tabs');
-  tabs.innerHTML = COINS.map(c => `
-    <button class="tab-btn ${c.key === 'btc' ? 'active' : ''}" onclick="selectCoin('${c.key}')">${c.label}</button>
-  `).join('');
-
-  selectCoin('btc');
-  document.getElementById('modal').classList.add('open');
-}
-
-function selectCoin(key) {
-  selectedCoin = key;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent === key.toUpperCase()));
-  const coin = COINS.find(c => c.key === key);
-  const price = selectedProduct?.[coin.field];
-  document.getElementById('amount-display').textContent = price ? `${price} ${key.toUpperCase()}` : 'Price not set — contact operator';
-  // Wallet will be fetched from a payment initiation call in the real flow
-  document.getElementById('wallet-display').textContent = 'Initiating payment address…';
-  fetch(`${API}/api/payment/initiate`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ product_id: selectedProduct.product_id, coin: key, email: document.getElementById('buyer-email').value || 'pending@rapax' })
-  }).then(r => r.json()).then(d => {
-    if (d.wallet_address) {
-      document.getElementById('wallet-display').textContent = d.wallet_address;
-    }
-  }).catch(() => {
-    document.getElementById('wallet-display').textContent = 'Address unavailable — contact operator';
-  });
-}
-
-function copyWallet() {
-  const txt = document.getElementById('wallet-display').textContent;
-  navigator.clipboard.writeText(txt).then(() => toast('Address copied'));
-}
-
-async function submitOrder() {
-  const email = document.getElementById('buyer-email').value.trim();
-  const tx = document.getElementById('tx-hash').value.trim();
-  if (!email) { toast('Enter your delivery email'); return; }
-  if (!tx) { toast('Paste your transaction hash'); return; }
+async function start(p, currency, btn) {
+  document.querySelectorAll('[data-pay]').forEach(b => b.disabled = true);
   try {
-    const r = await fetch(`${API}/api/payment/submit`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ product_id: selectedProduct.product_id, coin: selectedCoin, tx_hash: tx, buyer_email: email })
-    });
-    const d = await r.json();
-    if (r.ok) {
-      toast('Order submitted! Check your email for delivery link.');
-      closeModal();
-    } else {
-      toast(d.error || 'Submission failed');
+    const d = await api('/api/purchase/initiate', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ product_id: p.product_id, currency }) });
+    store.set('rapax_order', d.transaction_id);
+    if (d.checkout_url) {
+      const u = new URL(d.checkout_url);
+      if (u.protocol !== 'https:' || !u.hostname.endsWith('stripe.com')) throw new Error('Unexpected checkout address');
+      location.href = u.href; return;
     }
-  } catch(e) { toast('Network error'); }
+    track(d.transaction_id, d, p);
+  } catch (e) { toast(e.message); document.querySelectorAll('[data-pay]').forEach(b => b.disabled = false); }
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  selectedProduct = null;
+function copyBtn(id, label) { return `<button data-copy="${id}">${label}</button>`; }
+function wireCopy() {
+  document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () =>
+    navigator.clipboard.writeText($(b.dataset.copy).textContent).then(() => toast('Copied'), () => toast('Copy failed')));
 }
 
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
+function view(s, init) {
+  const cur = s.currency, done = s.status === 'complete', bad = ['failed','expired'].includes(s.status);
+  const addr = s.payment_address ? `
+    <div class="field"><label>Send exactly</label><div class="v" id="amt">${esc(cur === 'SOL' ? Number(s.amount_expected).toFixed(9) : s.amount_expected)} ${esc(cur)}</div>${copyBtn('amt','Copy amount')}</div>
+    ${cur === 'SOL' ? '<div class="warn">Send this EXACT amount (all 9 decimals). The tiny extra digits identify your order — do not round, and make sure your wallet or exchange does not deduct fees from it.</div>' : ''}
+    <div class="field"><label>To address</label><div class="v" id="adr">${esc(s.payment_address)}</div>${copyBtn('adr','Copy address')}</div>
+    ${s.destination_tag != null ? `<div class="field"><label>Destination tag (required)</label><div class="v" id="tag">${esc(s.destination_tag)}</div>${copyBtn('tag','Copy tag')}</div>
+      <div class="warn">You must include the destination tag. A payment without it cannot be matched to your order.</div>` : ''}
+    <div class="sub">Quote valid until ${esc(new Date(s.expires_at).toLocaleString())}. Payments are still credited for up to 24 hours. Use a fresh order for each payment.</div>` : '';
+  let msg = 'Waiting for your payment…', cls = '';
+  if (s.status === 'confirming') msg = 'Payment detected — waiting for confirmations…';
+  if (['confirmed','fingerprinting','delivering'].includes(s.status)) msg = 'Payment confirmed — preparing your personal copy…';
+  if (done) { msg = 'Your download is ready.'; cls = 'ok'; }
+  if (bad) { msg = s.status === 'expired' ? 'This order expired. Please start a new order.' : 'Something went wrong with this order. Contact support with the order number below.'; cls = 'bad'; }
+  let dl = '';
+  if (done && s.download_link) {
+    try { const u = new URL(s.download_link, location.origin);
+      if (u.origin === location.origin || u.protocol === 'https:') dl = `<a class="btn" style="display:inline-block;text-decoration:none" href="${esc(u.href)}">Download</a>`;
+    } catch {}
+  }
+  const showAddr = !done && !bad && !['USD','CAD'].includes(s.currency);
+  open(`<h2>Order</h2><div class="sub">Order number: <span id="oid">${esc(s.transaction_id)}</span> — keep this to retrieve your download.</div>
+    ${showAddr ? addr : ''}<div class="status ${cls}" id="st">${esc(msg)}</div>
+    <div class="row">${dl}<button class="btn ghost" id="x">${done||bad ? 'Close' : 'Hide'}</button></div>`);
+  $('x').onclick = () => { close(); if (done || bad) { store.del('rapax_order'); history.replaceState(null, '', '/'); } };
+  wireCopy();
 }
 
-loadProducts();
+async function track(id, first) {
+  clearInterval(poll); current = id;
+  const tick = async () => {
+    try {
+      const s = await api(`/api/purchase/status/${encodeURIComponent(id)}`);
+      view(s);
+      if (['complete','failed','expired'].includes(s.status)) { clearInterval(poll); poll = null; }
+    } catch (e) { if (/not found/i.test(e.message)) { store.del('rapax_order'); clearInterval(poll); close(); } }
+  };
+  await tick();
+  poll = setInterval(tick, 5000);
+}
+
+load();
+})();
 </script>
 </body>
 </html>
