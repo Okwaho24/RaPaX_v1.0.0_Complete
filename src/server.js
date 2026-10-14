@@ -63,12 +63,14 @@ app.use('/api', publicLimiter, downloadRoutes);
 app.use('/api/internal', operatorLimiter, internalRoutes);
 app.use('/api', operatorLimiter, operatorRoutes);
 
-// ── Serve Operator Dashboard (static SPA) ─────────────────────────
-const dashboardPath = path.resolve(__dirname, '../dashboard/dist');
-app.use('/dashboard', express.static(dashboardPath));
-app.get('/dashboard/*', (req, res) => {
-  res.sendFile(path.join(dashboardPath, 'index.html'));
-});
+// ── Serve Public Storefront ───────────────────────────────────────
+const publicPath = path.resolve(__dirname, '../public');
+app.use(express.static(publicPath));
+
+// ── Serve Operator Dashboard ──────────────────────────────────────
+const operatorHtml = path.resolve(__dirname, '../public/operator/index.html');
+app.get('/operator', (req, res) => res.sendFile(operatorHtml));
+app.get('/operator/', (req, res) => res.sendFile(operatorHtml));
 
 // ── Health Check ──────────────────────────────────────────────────
 app.get('/health', (req, res) => {
