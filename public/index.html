@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RaPaX™ — Sovereign Digital Products</title>
+<style>
+  :root {
+    --black: #0a0a0a;
+    --black2: #111111;
+    --black3: #1a1a1a;
+    --gold: #c9a84c;
+    --gold2: #e8c96a;
+    --gold3: #f5e199;
+    --white: #f0ece4;
+    --white2: #d4cfc6;
+    --red: #c0392b;
+    --green: #27ae60;
+    --radius: 6px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.7);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  a { color: var(--gold); text-decoration: none; }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 64px;
+    background: var(--black2);
+    border-bottom: 1px solid var(--gold);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
+  .logo span { color: var(--white2); font-weight: 300; }
+  nav a { font-size: 0.85rem; color: var(--white2); margin-left: 1.5rem; }
+  nav a:hover { color: var(--gold); }
+
+  /* HERO */
+  .hero {
+    text-align: center; padding: 5rem 2rem 3rem;
+    background: linear-gradient(180deg, var(--black2) 0%, var(--black) 100%);
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900; letter-spacing: 3px;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.3);
+  }
+  .hero p { color: var(--white2); margin-top: 1rem; font-size: 1.05rem; }
+
+  /* CATALOG */
+  .catalog { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
+  .catalog h2 {
+    font-size: 1.1rem; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold2); border-bottom: 1px solid #333; padding-bottom: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  .card {
+    background: var(--black2);
+    border: 1px solid #2a2a2a;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .card:hover { border-color: var(--gold); box-shadow: 0 0 20px rgba(201,168,76,0.15); }
+  .card-badge {
+    display: inline-block; font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    background: var(--gold); color: var(--black);
+    padding: 2px 8px; border-radius: 3px; margin-bottom: 0.75rem;
+  }
+  .card h3 { font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .card p { font-size: 0.85rem; color: var(--white2); line-height: 1.6; min-height: 3.2rem; }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; }
+  .price { font-size: 0.8rem; color: var(--gold2); }
+  .price strong { font-size: 1rem; color: var(--gold); }
+  .btn {
+    display: inline-block; padding: 0.5rem 1.2rem;
+    background: var(--gold); color: var(--black);
+    font-weight: 700; font-size: 0.8rem; letter-spacing: 1px;
+    border: none; border-radius: var(--radius); cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: var(--gold2); }
+  .btn-outline {
+    background: transparent; color: var(--gold);
+    border: 1px solid var(--gold);
+  }
+  .btn-outline:hover { background: rgba(201,168,76,0.1); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 4rem; color: var(--white2); }
+  .spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid #333; border-top-color: var(--gold);
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* MODAL */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--black2); border: 1px solid var(--gold);
+    border-radius: var(--radius); padding: 2rem;
+    width: min(560px, 96vw); max-height: 90vh; overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  .modal h2 { color: var(--gold); font-size: 1.2rem; margin-bottom: 1.5rem; }
+  .form-row { margin-bottom: 1.25rem; }
+  .form-row label { display: block; font-size: 0.8rem; color: var(--white2); margin-bottom: 0.4rem; letter-spacing: 1px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 0.65rem 0.85rem;
+    background: var(--black3); border: 1px solid #333;
+    border-radius: var(--radius); color: var(--white);
+    font-size: 0.9rem; font-family: inherit;
+  }
+  .form-row input:focus, .form-row select:focus {
+    outline: none; border-color: var(--gold);
+  }
+  .crypto-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .tab-btn {
+    padding: 0.4rem 0.9rem; font-size: 0.78rem; font-weight: 600;
+    border: 1px solid #333; border-radius: 4px;
+    background: transparent; color: var(--white2); cursor: pointer;
+  }
+  .tab-btn.active { background: var(--gold); color: var(--black); border-color: var(--gold); }
+  .pay-panel { display: none; }
+  .pay-panel.active { display: block; }
+  .wallet-addr {
+    background: var(--black3); border: 1px dashed #444;
+    border-radius: 4px; padding: 0.75rem;
+    font-family: monospace; font-size: 0.8rem;
+    word-break: break-all; color: var(--gold2);
+    margin-bottom: 0.75rem;
+  }
+  .copy-btn { font-size: 0.75rem; cursor: pointer; color: var(--gold); background: none; border: none; }
+  .modal-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+  .close-btn { position: absolute; top: 1rem; right: 1.25rem; background: none; border: none; color: var(--white2); font-size: 1.5rem; cursor: pointer; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--black2); border: 1px solid var(--gold);
+    color: var(--white); padding: 0.75rem 1.25rem;
+    border-radius: var(--radius); font-size: 0.88rem;
+    opacity: 0; transition: opacity 0.3s;
+    z-index: 999; max-width: 320px;
+  }
+  #toast.show { opacity: 1; }
+
+  /* EMAIL FORM */
+  .email-row { display: flex; gap: 0.5rem; margin-bottom: 0.25rem; }
+  .email-row input { flex: 1; }
+
+  /* FOOTER */
+  footer {
+    text-align: center; padding: 2rem;
+    color: #555; font-size: 0.8rem;
+    border-top: 1px solid #1a1a1a; margin-top: 4rem;
+  }
+  footer span { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">RaPaX<span>™</span></div>
+  <div>
+    <a href="/operator/">Operator</a>
+    <a href="#catalog">Catalog</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>SOVEREIGN DIGITAL PRODUCTS</h1>
+  <p>Crypto-native. Privacy-first. Instant delivery.</p>
+</div>
+
+<div class="catalog" id="catalog">
+  <h2>Available Products</h2>
+  <div id="grid" class="grid">
+    <div class="loading"><div class="spinner"></div>Loading catalog…</div>
+  </div>
+</div>
+
+<!-- Purchase Modal -->
+<div class="modal-bg" id="modal">
+  <div class="modal" style="position:relative">
+    <button class="close-btn" onclick="closeModal()">×</button>
+    <h2 id="modal-title">Purchase</h2>
+
+    <div class="form-row">
+      <label>DELIVERY EMAIL</label>
+      <div class="email-row">
+        <input type="email" id="buyer-email" placeholder="you@example.com"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>SELECT PAYMENT RAIL</label>
+      <div class="crypto-tabs" id="crypto-tabs"></div>
+    </div>
+
+    <div id="pay-panels"></div>
+
+    <div class="form-row" id="amount-row">
+      <label>AMOUNT DUE</label>
+      <div class="wallet-addr" id="amount-display">—</div>
+    </div>
+
+    <div class="form-row">
+      <label>SEND TO WALLET</label>
+      <div class="wallet-addr" id="wallet-display">Select a payment method above</div>
+      <button class="copy-btn" onclick="copyWallet()">⎘ Copy address</button>
+    </div>
+
+    <div class="form-row">
+      <label>TRANSACTION ID / TX HASH</label>
+      <input type="text" id="tx-hash" placeholder="Paste your transaction hash here"/>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="submitOrder()">CONFIRM PAYMENT</button>
+      <button class="btn btn-outline" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<footer>
+  &copy; 2026 <span>RaPaX™</span> — All rights reserved. Sovereign Infrastructure.
+</footer>
+
+<script>
+const API = '';
+let products = [];
+let selectedProduct = null;
+let selectedCoin = null;
+
+const COINS = [
+  { key: 'btc',  label: 'BTC',  field: 'price_btc' },
+  { key: 'eth',  label: 'ETH',  field: 'price_eth' },
+  { key: 'sol',  label: 'SOL',  field: 'price_sol' },
+  { key: 'usdt', label: 'USDT', field: 'price_usdt' },
+];
+
+async function loadProducts() {
+  try {
+    const r = await fetch(`${API}/api/products`);
+    const data = await r.json();
+    products = data.products || data || [];
+    renderGrid();
+  } catch(e) {
+    document.getElementById('grid').innerHTML = '<div class="loading">Failed to load catalog.</div>';
+  }
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  const avail = products.filter(p => p.availability !== false && p.availability !== 0);
+  if (!avail.length) {
+    grid.innerHTML = '<div class="loading" style="color:#555">No products available yet.</div>';
+    return;
+  }
+  grid.innerHTML = avail.map(p => `
+    <div class="card" onclick="openModal('${p.product_id}')">
+      <div class="card-badge">v${p.version || '1.0'}</div>
+      <h3>${esc(p.name)}</h3>
+      <p>${esc(p.description || '')}</p>
+      <div class="card-footer">
+        <div class="price">
+          ${p.price_btc ? `<strong>${p.price_btc}</strong> BTC` : ''}
+          ${p.price_usdt ? ` · <strong>${p.price_usdt}</strong> USDT` : ''}
+        </div>
+        <button class="btn" onclick="event.stopPropagation();openModal('${p.product_id}')">BUY</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function openModal(id) {
+  selectedProduct = products.find(p => p.product_id === id);
+  if (!selectedProduct) return;
+  document.getElementById('modal-title').textContent = selectedProduct.name;
+  document.getElementById('tx-hash').value = '';
+  document.getElementById('buyer-email').value = '';
+
+  // Build tabs
+  const tabs = document.getElementById('crypto-tabs');
+  tabs.innerHTML = COINS.map(c => `
+    <button class="tab-btn ${c.key === 'btc' ? 'active' : ''}" onclick="selectCoin('${c.key}')">${c.label}</button>
+  `).join('');
+
+  selectCoin('btc');
+  document.getElementById('modal').classList.add('open');
+}
+
+function selectCoin(key) {
+  selectedCoin = key;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent === key.toUpperCase()));
+  const coin = COINS.find(c => c.key === key);
+  const price = selectedProduct?.[coin.field];
+  document.getElementById('amount-display').textContent = price ? `${price} ${key.toUpperCase()}` : 'Price not set — contact operator';
+  // Wallet will be fetched from a payment initiation call in the real flow
+  document.getElementById('wallet-display').textContent = 'Initiating payment address…';
+  fetch(`${API}/api/payment/initiate`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ product_id: selectedProduct.product_id, coin: key, email: document.getElementById('buyer-email').value || 'pending@rapax' })
+  }).then(r => r.json()).then(d => {
+    if (d.wallet_address) {
+      document.getElementById('wallet-display').textContent = d.wallet_address;
+    }
+  }).catch(() => {
+    document.getElementById('wallet-display').textContent = 'Address unavailable — contact operator';
+  });
+}
+
+function copyWallet() {
+  const txt = document.getElementById('wallet-display').textContent;
+  navigator.clipboard.writeText(txt).then(() => toast('Address copied'));
+}
+
+async function submitOrder() {
+  const email = document.getElementById('buyer-email').value.trim();
+  const tx = document.getElementById('tx-hash').value.trim();
+  if (!email) { toast('Enter your delivery email'); return; }
+  if (!tx) { toast('Paste your transaction hash'); return; }
+  try {
+    const r = await fetch(`${API}/api/payment/submit`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ product_id: selectedProduct.product_id, coin: selectedCoin, tx_hash: tx, buyer_email: email })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      toast('Order submitted! Check your email for delivery link.');
+      closeModal();
+    } else {
+      toast(d.error || 'Submission failed');
+    }
+  } catch(e) { toast('Network error'); }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  selectedProduct = null;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+loadProducts();
+</script>
+</body>
+</html>
