@@ -12,8 +12,11 @@
     "db:seed": "node src/utils/seedDb.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1151.0",
+    "@aws-sdk/s3-request-presigner": "^3.1151.0",
     "axios": "^1.6.7",
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "csv-writer": "^1.6.0",
