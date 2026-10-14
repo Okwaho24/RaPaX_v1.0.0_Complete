@@ -12,7 +12,7 @@ import { TransactionModel, TxStatus } from '../models/transactionModel.js';
 import { auditLog, EventType } from '../utils/auditLogger.js';
 
 // ── Supported currencies ──────────────────────────────────────────
-export const SUPPORTED_CURRENCIES = ['BTC', 'ETH', 'SOL', 'USDT'];
+export const SUPPORTED_CURRENCIES = ['BTC', 'ETH', 'SOL', 'USDT', 'XRP'];
 
 // ── Address Generator ─────────────────────────────────────────────
 // In production: derive from HD wallet (xpub for BTC/ETH, keypair for SOL)
@@ -21,26 +21,20 @@ export const SUPPORTED_CURRENCIES = ['BTC', 'ETH', 'SOL', 'USDT'];
 
 export const AddressGenerator = {
 
-  /**
-   * Generate a unique payment address for a given currency + transaction.
-   * Replace each stub with real HD derivation in production.
-   */
-  generate(currency, transactionId) {
-    const tag = transactionId.replace(/-/g, '').slice(0, 16);
-    switch (currency.toUpperCase()) {
-      case 'BTC':
-        // Production: derive from xpub using BIP44/BIP84
-        return `bc1q${tag}rapaxbtc`;
-      case 'ETH':
-      case 'USDT':
-        // Production: derive from ETH xpub / use separate address per tx
-        return `0x${tag}rapaxeth`.toLowerCase();
-      case 'SOL':
-        // Production: derive from Solana HD wallet
-        return `${tag}RAPAXSOL`;
-      default:
-        throw new Error(`Unsupported currency: ${currency}`);
-    }
+  // Returns operator's static wallet address for the currency.
+  // Poller checks balance on this address to detect payment.
+  // TODO: upgrade to HD-derivation (unique address per tx) post-launch.
+  generate(currency, _transactionId) {
+    const wallets = {
+      BTC:  config.wallets.btc,
+      ETH:  config.wallets.eth,
+      SOL:  config.wallets.sol,
+      USDT: config.wallets.eth,  // ERC-20 USDT shares the ETH address
+      XRP:  config.wallets.xrp,
+    };
+    const addr = wallets[currency.toUpperCase()];
+    if (!addr) throw new Error(`No wallet configured for currency: ${currency}`);
+    return addr;
   },
 };
 
@@ -115,6 +109,22 @@ export const BlockchainMonitor = {
       return { received: 0, confirmations: 0, txHash: null };
     }
   },
+
+  async XRP(address, expectedAmount) {
+    // Ripple public JSON-RPC — account_info returns balance in drops (1 XRP = 1,000,000 drops)
+    try {
+      const { data } = await axios.post(config.blockchain.xrp.rpcUrl, {
+        method: 'account_info',
+        params: [{ account: address, ledger_index: 'current' }],
+      }, { timeout: 10000 });
+      const drops    = data.result?.account_data?.Balance || '0';
+      const received = parseInt(drops, 10) / 1e6;
+      return { received, confirmations: received >= expectedAmount ? 2 : 0, txHash: null };
+    } catch (err) {
+      console.error('[RaPaX™][XRP Monitor]', err.message);
+      return { received: 0, confirmations: 0, txHash: null };
+    }
+  },
 };
 
 // ── Required confirmations per currency ───────────────────────────
@@ -123,6 +133,7 @@ const REQUIRED_CONFIRMATIONS = {
   ETH:  config.blockchain.eth.confirmations,
   SOL:  config.blockchain.sol.confirmations,
   USDT: config.blockchain.eth.confirmations,
+  XRP:  config.blockchain.xrp.confirmations,
 };
 
 // ── PaymentService (main interface) ──────────────────────────────
