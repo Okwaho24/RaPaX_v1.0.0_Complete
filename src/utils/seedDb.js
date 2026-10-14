@@ -7,7 +7,7 @@ import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import { initDb, getDb } from './initDb.js';
-import { persistDb } from './db.js';
+
 import { ProductModel } from '../models/productModel.js';
 import { config } from '../config/index.js';
 
@@ -67,7 +67,7 @@ async function seed() {
   await new Promise(resolve => setTimeout(resolve, 100));
 
   console.log('[Seed] Calling persistDb()');
-  persistDb();
+  // persistDb not needed — better-sqlite3 writes are synchronous
   console.log('\n[RaPaX™] Seed complete ✓');
   process.exit(0);
 }
