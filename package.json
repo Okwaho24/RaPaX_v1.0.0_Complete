@@ -1,19 +1,21 @@
 {
   "name": "rapax",
   "version": "1.0.0",
-  "description": "RaPaX™ — Sovereign Digital Products Vending Machine",
+  "description": "RaPaX\u2122 \u2014 Sovereign Digital Products Vending Machine",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test": "node --test --test-concurrency=1 test/derivation.test.mjs test/integration.test.mjs test/stripe.test.mjs test/sol_cad.test.mjs",
     "db:init": "node src/utils/initDb.js",
     "db:seed": "node src/utils/seedDb.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1151.0",
     "@aws-sdk/s3-request-presigner": "^3.1151.0",
+    "@scure/bip32": "^2.4.0",
+    "@scure/btc-signer": "^2.4.1",
     "axios": "^1.6.7",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",

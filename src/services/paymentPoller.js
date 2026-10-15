@@ -7,6 +7,25 @@ import cron from 'node-cron';
 import { TransactionModel, TxStatus } from '../models/transactionModel.js';
 import { PaymentService } from './paymentService.js';
 import { Pipeline } from './pipeline.js';
+import { getDb } from '../utils/initDb.js';
+import { startPipeline } from './stripeService.js';
+
+// Paid orders stuck in 'confirmed' (pipeline crashed / server restarted) are retried.
+const retries = new Map();
+const MAX_RETRIES = 5;
+function sweepStuckConfirmed() {
+  const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const rows = getDb().prepare(
+    `SELECT transaction_id FROM transactions WHERE status='confirmed' AND updated_at < ?`
+  ).all([cutoff]);
+  for (const { transaction_id: id } of rows) {
+    const n = (retries.get(id) || 0) + 1;
+    if (n > MAX_RETRIES) continue;            // leave for the operator
+    retries.set(id, n);
+    console.log(`[RaPaX™][Poller] Retrying stuck confirmed order ${id} (attempt ${n})`);
+    startPipeline(id, id2 => Pipeline.run(id2));
+  }
+}
 
 let running = false;
 
@@ -17,6 +36,7 @@ export function startPaymentPoller() {
     running = true;
 
     try {
+      sweepStuckConfirmed();
       const pending = TransactionModel.listPending();
       if (pending.length === 0) { running = false; return; }
 

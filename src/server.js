@@ -21,6 +21,7 @@ import purchaseRoutes from './routes/purchase.js';
 import downloadRoutes from './routes/download.js';
 import internalRoutes from './routes/internal.js';
 import operatorRoutes from './routes/operator.js';
+import webhookRoutes  from './routes/webhooks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -31,6 +32,8 @@ app.use(helmet({
 }));
 app.use(cors());
 app.use(morgan(config.server.env === 'production' ? 'combined' : 'dev'));
+// Webhooks need the RAW body → mounted before express.json()
+app.use('/api', webhookRoutes);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -96,11 +99,25 @@ app.use((err, req, res, next) => {
 
 // ── Boot ──────────────────────────────────────────────────────────
 async function boot() {
+  // 0. Production safety: refuse to run with default / weak secrets
+  if (config.server.env === 'production') {
+    const weak = (v, dflt) => !v || v === dflt || String(v).length < 16;
+    const bad = [];
+    if (weak(config.auth.operatorSecret, 'rapax_operator_secret')) bad.push('OPERATOR_SECRET');
+    if (weak(config.auth.jwtSecret, 'rapax_jwt_secret')) bad.push('JWT_SECRET');
+    if (bad.length) {
+      console.error(`[RaPaX™] FATAL: ${bad.join(', ')} unset, default, or shorter than 16 chars. Refusing to start.`);
+      process.exit(1);
+    }
+  }
+
   // 1. Initialize DB (creates tables if not exist)
   await initDb();
 
-  // 2. Auto-seed if empty
-  await seedProducts();
+  // 2. Demo seed — NEVER in production unless explicitly requested
+  if (config.server.env !== 'production' || process.env.SEED_DEMO === 'true') {
+    await seedProducts();
+  }
 
   // 3. Start payment poller
   startPaymentPoller();
@@ -115,7 +132,7 @@ async function boot() {
     console.log(` ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝`);
     console.log(`\n RaPaX™ — Sovereign Digital Vending Machine`);
     console.log(` Running on http://localhost:${config.server.port}`);
-    console.log(` Dashboard: http://localhost:${config.server.port}/dashboard`);
+    console.log(` Operator:  http://localhost:${config.server.port}/operator`);
     console.log(` Environment: ${config.server.env}\n`);
   });
 }

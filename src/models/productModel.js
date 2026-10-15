@@ -9,19 +9,19 @@ const now = () => new Date().toISOString();
 
 export const ProductModel = {
 
-  create({ name, description, price_btc, price_eth, price_sol, price_usdt,
+  create({ name, description, price_btc, price_eth, price_sol, price_usdt, price_xrp, price_cad,
            price_fiat = null, file_path, version = '1.0.0', availability = true }) {
     const db         = getDb();
     const product_id = uuidv4();
     const ts         = now();
     db.prepare(`
       INSERT INTO products
-        (product_id,name,description,price_btc,price_eth,price_sol,price_usdt,
+        (product_id,name,description,price_btc,price_eth,price_sol,price_usdt,price_xrp,price_cad,
          price_fiat,file_path,version,availability,created_at,updated_at)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `).run([
       product_id, name, description ?? null,
-      price_btc ?? null, price_eth ?? null, price_sol ?? null, price_usdt ?? null,
+      price_btc ?? null, price_eth ?? null, price_sol ?? null, price_usdt ?? null, price_xrp ?? null, price_cad ?? null,
       price_fiat ?? null, file_path, version, availability ? 1 : 0, ts, ts,
     ]);
     const product = ProductModel.findById(product_id);
@@ -32,7 +32,7 @@ export const ProductModel = {
 
   listPublic() {
     return getDb().prepare(`
-      SELECT product_id,name,description,price_btc,price_eth,price_sol,price_usdt,
+      SELECT product_id,name,description,price_btc,price_eth,price_sol,price_usdt,price_xrp,price_cad,
              price_fiat,version,availability,created_at,updated_at
       FROM products WHERE availability=1 ORDER BY created_at DESC
     `).all();
@@ -52,7 +52,7 @@ export const ProductModel = {
 
   findByIdPublic(id) {
     return getDb().prepare(`
-      SELECT product_id,name,description,price_btc,price_eth,price_sol,price_usdt,
+      SELECT product_id,name,description,price_btc,price_eth,price_sol,price_usdt,price_xrp,price_cad,
              price_fiat,version,availability,created_at,updated_at
       FROM products WHERE product_id=?
     `).get([id]) ?? null;
@@ -60,7 +60,7 @@ export const ProductModel = {
 
   update(productId, fields) {
     const allowed = ['name','description','price_btc','price_eth','price_sol',
-                     'price_usdt','price_fiat','file_path','version','availability'];
+                     'price_usdt','price_xrp','price_cad','price_fiat','file_path','version','availability'];
     const sets = [];
     const vals = [];
     for (const k of Object.keys(fields)) {
