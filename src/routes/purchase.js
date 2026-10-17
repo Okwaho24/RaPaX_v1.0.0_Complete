@@ -8,6 +8,7 @@ import { ProductModel } from '../models/productModel.js';
 import { TransactionModel } from '../models/transactionModel.js';
 import { PaymentAddressModel } from '../models/paymentAddressModel.js';
 import { DeliveryModel } from '../models/deliveryModel.js';
+import { LexForgeService } from '../services/lexforgeService.js';
 import { PaymentService, SUPPORTED_CURRENCIES, ENABLED_CURRENCIES } from '../services/paymentService.js';
 
 const router = Router();
@@ -21,7 +22,7 @@ function splitAddress(stored) {
 }
 
 router.post('/purchase/initiate', async (req, res) => {
-  const { product_id, currency, wallet_address } = req.body;
+  const { product_id, currency, wallet_address, jurisdiction, region, language_pref } = req.body;
 
   if (!product_id || !currency) {
     return res.status(400).json({ error: 'product_id and currency are required' });
@@ -37,11 +38,35 @@ router.post('/purchase/initiate', async (req, res) => {
   if (!product)             return res.status(404).json({ error: 'Product not found' });
   if (!product.availability) return res.status(409).json({ error: 'Product is not available' });
 
+  // Legal documents are jurisdiction- and language-specific. Refuse BEFORE taking payment if we cannot supply them.
+  if (typeof jurisdiction !== 'string' || !/^[A-Z]{2}$/.test(jurisdiction)) {
+    return res.status(400).json({ error: 'jurisdiction (ISO 3166-1 alpha-2 country code, upper case, e.g. "CA") is required', code: 'jurisdiction_required' });
+  }
+  if (region != null && (typeof region !== 'string' || !/^[A-Z]{2}-[A-Z0-9]{1,3}$/.test(region))) {
+    return res.status(400).json({ error: 'region must look like "CA-QC"', code: 'invalid_region' });
+  }
+  if (language_pref != null && (typeof language_pref !== 'string' || !/^(auto|all|[A-Za-z]{2}([_-][A-Za-z]{2,5})?)$/.test(language_pref))) {
+    return res.status(400).json({ error: "language_pref must be 'auto', 'all' or a language code", code: 'invalid_language' });
+  }
+  try {
+    const avail = await LexForgeService.availability({ product_id, jurisdiction, region: region || undefined, language_pref: language_pref || undefined });
+    if (!avail.available) {
+      return res.status(422).json({ error: 'This product cannot be sold with correct legal documents for your location yet.', code: avail.code || 'unavailable', reason: avail.reason });
+    }
+  } catch (err) {
+    // Cannot confirm we can fulfil → do not take money.
+    console.error('[RaPaX™] LexForge availability failed:', err.message);
+    return res.status(503).json({ error: 'Checkout temporarily unavailable. No payment was taken.', code: 'fulfilment_unavailable' });
+  }
+
   try {
     const { transaction, paymentAddress, checkout } = await PaymentService.initiatePurchase({
       product,
       currency,
       buyerWallet: wallet_address || null,
+      jurisdiction,
+      region: region || null,
+      languagePref: language_pref || null,
     });
 
     if (checkout) {
@@ -99,6 +124,10 @@ router.get('/purchase/status/:transaction_id', (req, res) => {
     if (paymentAddr) {
       Object.assign(response, splitAddress(paymentAddr.address));
       response.expires_at      = paymentAddr.expires_at;
+    }
+
+    if (tx.status === 'held') {
+      response.message = 'Payment received. Your order needs a manual check before delivery; you will be contacted. No further payment is needed.';
     }
 
     if (delivery && (tx.status === 'delivering' || tx.status === 'complete')) {

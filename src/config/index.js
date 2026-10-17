@@ -37,6 +37,20 @@ export const config = {
   acerbe: {
     baseUrl: process.env.ACERBE_BASE_URL || 'http://localhost:5000',
     apiKey:  process.env.ACERBE_API_KEY  || '',
+    timeoutMs: parseInt(process.env.ACERBE_TIMEOUT_MS || '300000', 10),
+  },
+
+  // LexForge™ legal-document bundle service. Same secret LexForge verifies (RAPAX_WEBHOOK_SECRET).
+  lexforge: {
+    baseUrl:   process.env.LEXFORGE_BASE_URL || 'http://localhost:3000',
+    secret:    process.env.RAPAX_WEBHOOK_SECRET || '',
+    timeoutMs: parseInt(process.env.LEXFORGE_TIMEOUT_MS || '30000', 10),
+  },
+
+  pipeline: {
+    maxAttempts: parseInt(process.env.PIPELINE_MAX_ATTEMPTS || '3', 10),
+    backoffMs:   (process.env.PIPELINE_BACKOFF_MS || '5000,30000').split(',').map(Number),
+    alertWebhookUrl: process.env.ALERT_WEBHOOK_URL || '',
   },
 
   blockchain: {

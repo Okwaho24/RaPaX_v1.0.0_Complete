@@ -267,7 +267,7 @@ export const PaymentService = {
    * Initiate a purchase: create transaction + unique payment address.
    * Returns { transaction, paymentAddress } to show buyer.
    */
-  async initiatePurchase({ product, currency, buyerWallet = null }) {
+  async initiatePurchase({ product, currency, buyerWallet = null, jurisdiction = null, region = null, languagePref = null }) {
     if (!ENABLED_CURRENCIES.includes(currency.toUpperCase())) {
       throw new Error(`Currency not enabled: ${currency}`);
     }
@@ -286,6 +286,7 @@ export const PaymentService = {
       currency:        cur,
       amount_expected: amount,
       product_version: product.version,
+      jurisdiction, region, language_pref: languagePref,
     });
 
     if (cur === 'USD' || cur === 'CAD') {

@@ -14,6 +14,10 @@ import { startPipeline } from './stripeService.js';
 const retries = new Map();
 const MAX_RETRIES = 5;
 function sweepStuckConfirmed() {
+  // A run that died mid-way (crash/redeploy) leaves the order in 'fingerprinting'. A live run is bounded well under 30 min.
+  const stale = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  getDb().prepare(`UPDATE transactions SET status='confirmed', updated_at=? WHERE status='fingerprinting' AND updated_at < ?`)
+    .run([new Date().toISOString(), stale]);
   const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
   const rows = getDb().prepare(
     `SELECT transaction_id FROM transactions WHERE status='confirmed' AND updated_at < ?`

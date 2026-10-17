@@ -48,7 +48,7 @@ const publicLimiter = rateLimit({
 
 const purchaseLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 20,
+  max: parseInt(process.env.PURCHASE_RATE_MAX || '20', 10),
   message: { error: 'Too many purchase attempts.' },
 });
 
@@ -105,8 +105,14 @@ async function boot() {
     const bad = [];
     if (weak(config.auth.operatorSecret, 'rapax_operator_secret')) bad.push('OPERATOR_SECRET');
     if (weak(config.auth.jwtSecret, 'rapax_jwt_secret')) bad.push('JWT_SECRET');
+    const isDefaultUrl = (v, d) => !v || v === d;
+    if (!config.acerbe.apiKey || config.acerbe.apiKey.length < 32) bad.push('ACERBE_API_KEY (>=32 chars)');
+    if (isDefaultUrl(process.env.ACERBE_BASE_URL, 'http://localhost:5000')) bad.push('ACERBE_BASE_URL');
+    if (!config.lexforge.secret || config.lexforge.secret.length < 32) bad.push('RAPAX_WEBHOOK_SECRET (>=32 chars)');
+    if (isDefaultUrl(process.env.LEXFORGE_BASE_URL, '')) bad.push('LEXFORGE_BASE_URL');
+    for (const k of ['R2_ENDPOINT', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY']) if (!process.env[k]) bad.push(k);
     if (bad.length) {
-      console.error(`[RaPaX™] FATAL: ${bad.join(', ')} unset, default, or shorter than 16 chars. Refusing to start.`);
+      console.error(`[RaPaX™] FATAL: ${bad.join(', ')} unset, default, or too short. Refusing to start.`);
       process.exit(1);
     }
   }

@@ -62,7 +62,7 @@ export const DeliveryService = {
     }
 
     const r2Key = fingerprint.fingerprinted_file_path;
-    const signedUrl = await getSignedDownloadUrl(r2Key, 900);
+    const signedUrl = await getSignedDownloadUrl(r2Key, 900, path.basename(r2Key));
 
     DeliveryModel.recordDownload(delivery.delivery_id);
     TransactionModel.updateStatus(delivery.transaction_id, TxStatus.COMPLETE);

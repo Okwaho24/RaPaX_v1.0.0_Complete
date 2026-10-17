@@ -29,8 +29,10 @@ export async function initDb() {
     try { db.exec(`ALTER TABLE products ADD COLUMN ${col} REAL`); }
     catch (e) { if (!/duplicate column/i.test(e.message)) throw e; }
   }
-  try { db.exec('ALTER TABLE transactions ADD COLUMN provider_ref TEXT'); }
-  catch (e) { if (!/duplicate column/i.test(e.message)) throw e; }
+  for (const col of ['provider_ref', 'jurisdiction', 'region', 'language_pref', 'hold_reason']) {
+    try { db.exec(`ALTER TABLE transactions ADD COLUMN ${col} TEXT`); }
+    catch (e) { if (!/duplicate column/i.test(e.message)) throw e; }
+  }
   startAutoPersist(5000);
   console.log('[RaPaX™] Database initialised ✓');
 }
