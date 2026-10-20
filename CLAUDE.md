@@ -7,7 +7,7 @@ Owner: Neil Scott Archer
 Business: Archer Chain Analytics (Sole Proprietor — NOT Inc.)
 ISC: 102237785 | CRA BN: 709110639 | SK: 709110639SK0001
 Address: 417 Avenue G S, 5th Ave N, Saskatoon, SK S7M 1V5
-Email: archerchainanalytics@gmail.com | Website: mahihkan.com
+Email: archerchainanalytics@gmail.com | Website: archerchainanalytics.com
 GitHub: ArcherChainAnalytics-102237785 / ArcherChainAnalytics-Mahihkan
 
 ## 14 PRODUCTS

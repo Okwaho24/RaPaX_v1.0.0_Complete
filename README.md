@@ -180,7 +180,7 @@ Gated by FIAT_ENABLED=false in .env. FiatService stub exists in paymentService.j
 ```bash
 cloudflared tunnel login
 cloudflared tunnel create rapax
-cloudflared tunnel route dns rapax store.mahihkan.com
+cloudflared tunnel route dns rapax store.archerchainanalytics.com
 cloudflared tunnel run --url http://localhost:4000 rapax
 ```
 

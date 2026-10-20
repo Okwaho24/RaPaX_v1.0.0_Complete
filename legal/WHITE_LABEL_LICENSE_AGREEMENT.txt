@@ -1,7 +1,7 @@
 RaPaX™ White-Label License Agreement
 Enterprise Rebranding and Resale Authorization
 Archer Chain Analytics™
-Mahihkan.com
+archerchainanalytics.com
 CRA BN: 754975035 | GST/HST: 754975035 RT0001
 Saskatoon, Saskatchewan, Canada
 
@@ -10,7 +10,7 @@ Document Type: Enterprise License — Confidential | Version: 1.0
 ────────────────────────────────────────────────────────────
 PARTIES
 ────────────────────────────────────────────────────────────
-Licensor:  Archer Chain Analytics™, Mahihkan.com,
+Licensor:  Archer Chain Analytics™, archerchainanalytics.com,
            Saskatoon, Saskatchewan, Canada.
 
 Licensee:  The entity identified in the executed

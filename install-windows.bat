@@ -12,7 +12,7 @@ echo  ██║  ██║██║  ██║██║     ██║  ██║
 echo  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝
 echo.
 echo  Sovereign Digital Vending Machine v1.0.0
-echo  Archer Chain Analytics™ — Mahihkan.com
+echo  Archer Chain Analytics™ — archerchainanalytics.com
 echo  ─────────────────────────────────────────
 echo.
 
