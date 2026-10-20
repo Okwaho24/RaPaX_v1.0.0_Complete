@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node --test --test-concurrency=1 test/derivation.test.mjs test/integration.test.mjs test/stripe.test.mjs test/sol_cad.test.mjs",
+    "test": "node --test --test-concurrency=1 test/derivation.test.mjs test/integration.test.mjs test/stripe.test.mjs test/sol_cad.test.mjs test/backup.test.mjs",
     "db:init": "node src/utils/initDb.js",
     "db:seed": "node src/utils/seedDb.js"
   },

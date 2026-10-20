@@ -15,7 +15,7 @@ export const config = {
   },
 
   db: {
-    path: path.resolve(ROOT, process.env.DB_PATH || 'rapax.db'),
+    path: path.resolve(ROOT, process.env.DB_PATH || 'data/db/rapax.db'),
   },
 
   storage: {

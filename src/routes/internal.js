@@ -14,6 +14,7 @@ import { Pipeline } from '../services/pipeline.js';
 import { AcerbEService } from '../services/acerbeService.js';
 import { DeliveryService } from '../services/deliveryService.js';
 import { FingerprintModel } from '../models/fingerprintModel.js';
+import { runBackup, listBackups, backupStatus } from '../services/backupService.js';
 
 const router = Router();
 
@@ -90,6 +91,18 @@ router.post('/delivery/issue', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── POST /internal/backup — take a DB backup to R2 now ────────────
+router.post('/backup', async (req, res) => {
+  try { res.json({ success: true, ...(await runBackup()) }); }
+  catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+// ── GET /internal/backups — status + list of stored backups ───────
+router.get('/backups', async (req, res) => {
+  try { res.json({ status: backupStatus(), backups: await listBackups() }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 export default router;

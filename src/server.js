@@ -14,6 +14,9 @@ import { config } from './config/index.js';
 import { initDb } from './utils/initDb.js';
 import { seedProducts } from './utils/seedDb.js';
 import { startPaymentPoller } from './services/paymentPoller.js';
+import { startBackupScheduler, stopBackupScheduler } from './services/backupService.js';
+import { getDbPath, closeDb } from './utils/db.js';
+import fs from 'fs';
 
 // Routes
 import productRoutes  from './routes/products.js';
@@ -133,8 +136,18 @@ async function boot() {
     }
   }
 
+  // 0b. Production safety: on Railway the DB must live inside the persistent volume
+  const volume = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+  if (config.server.env === 'production' && volume) {
+    const rel = path.relative(volume, getDbPath());
+    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      console.error(`[RaPaX™] WARNING: database ${getDbPath()} is NOT inside the persistent volume ${volume}. Data will be lost on redeploy. Set DB_PATH=${volume}/rapax.db`);
+    }
+  }
+
   // 1. Initialize DB (creates tables if not exist)
   await initDb();
+  console.log(`[RaPaX™] Database: ${getDbPath()} (${fs.existsSync(getDbPath()) ? fs.statSync(getDbPath()).size : 0} bytes)`);
 
   // 2. Demo seed — NEVER in production unless explicitly requested
   if (config.server.env !== 'production' || process.env.SEED_DEMO === 'true') {
@@ -144,8 +157,11 @@ async function boot() {
   // 3. Start payment poller
   startPaymentPoller();
 
+  // 3b. Scheduled DB backups to R2
+  startBackupScheduler();
+
   // 4. Start HTTP server
-  app.listen(config.server.port, '0.0.0.0', () => {
+  const server = app.listen(config.server.port, '0.0.0.0', () => {
     console.log(`\n ██████╗  █████╗ ██████╗  █████╗ ██╗  ██╗`);
     console.log(` ██╔══██╗██╔══██╗██╔══██╗██╔══██╗╚██╗██╔╝`);
     console.log(` ██████╔╝███████║██████╔╝███████║ ╚███╔╝ `);
@@ -157,8 +173,28 @@ async function boot() {
     console.log(` Operator:  http://localhost:${config.server.port}/operator`);
     console.log(` Environment: ${config.server.env}\n`);
   });
+
+  // 5. Graceful shutdown (Railway sends SIGTERM on every redeploy)
+  let stopping = false;
+  const shutdown = (sig) => {
+    if (stopping) return;
+    stopping = true;
+    console.log(`[RaPaX™] ${sig} received — shutting down gracefully…`);
+    stopBackupScheduler();
+    const force = setTimeout(() => { console.error('[RaPaX™] Forced exit after 15s'); process.exit(1); }, 15000);
+    force.unref();
+    server.close(() => {
+      try { closeDb(); } catch (e) { console.error('[RaPaX™] DB close error:', e.message); }
+      process.exit(0);
+    });
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
-boot();
+boot().catch((err) => {
+  console.error('[RaPaX™] FATAL: boot failed:', err);
+  process.exit(1);
+});
 
 export default app;
