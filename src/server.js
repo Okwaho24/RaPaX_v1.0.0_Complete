@@ -26,6 +26,10 @@ import webhookRoutes  from './routes/webhooks.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// Behind a reverse proxy (Railway) every visitor otherwise appears as the proxy's IP and all
+// buyers share one rate-limit bucket. Number of trusted proxy hops; 0 disables (direct exposure).
+app.set('trust proxy', Number.parseInt(process.env.TRUST_PROXY_HOPS ?? '1', 10));
+
 // ── Security & Middleware ─────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: false, // relaxed for dashboard serving
@@ -52,20 +56,38 @@ const purchaseLimiter = rateLimit({
   message: { error: 'Too many purchase attempts.' },
 });
 
+// Order-status polling (the storefront polls every 5 s ≈ 12 req/min per open order).
+const statusLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many status checks — please slow down.' },
+});
+
 const operatorLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 500,
   message: { error: 'Too many operator requests.' },
 });
 
+// ── Rate limits, scoped per route group ───────────────────────────
+// Each limiter is mounted on its own paths only. Mounting a limiter on '/api' would count every
+// request in every group against it (downloads, operator calls and status polling would starve
+// one another).
+app.use(['/api/products', '/api/product', '/api/payment-methods', '/api/download'], publicLimiter);
+app.post('/api/purchase/initiate', purchaseLimiter);
+app.get('/api/purchase/status/:transaction_id', statusLimiter);
+app.use(['/api/operator', '/api/internal'], operatorLimiter);
+
 // ── Public Routes ─────────────────────────────────────────────────
-app.use('/api', publicLimiter, productRoutes);
-app.use('/api', purchaseLimiter, purchaseRoutes);
-app.use('/api', publicLimiter, downloadRoutes);
+app.use('/api', productRoutes);
+app.use('/api', purchaseRoutes);
+app.use('/api', downloadRoutes);
 
 // ── Internal Routes (operator-auth protected) ─────────────────────
-app.use('/api/internal', operatorLimiter, internalRoutes);
-app.use('/api', operatorLimiter, operatorRoutes);
+app.use('/api/internal', internalRoutes);
+app.use('/api', operatorRoutes);
 
 // ── Serve Public Storefront ───────────────────────────────────────
 const publicPath = path.resolve(__dirname, '../public');

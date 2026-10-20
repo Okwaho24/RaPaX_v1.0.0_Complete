@@ -21,8 +21,9 @@ export const AcerbEService = {
    */
   async fingerprint({ transactionId, product, transaction }) {
     const payload = {
-      product_id:   product.product_id,
-      buyer_wallet: transaction.buyer_wallet ?? 'anonymous',
+      product_id:     product.product_id,
+      transaction_id: transactionId,
+      buyer_wallet:   transaction.buyer_wallet ?? 'anonymous',
       timestamp:    new Date().toISOString(),
       file_path:    product.file_path,
     };
