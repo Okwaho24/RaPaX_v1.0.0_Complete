@@ -3,6 +3,7 @@
 //  POST /purchase/initiate
 //  GET  /purchase/status/:transaction_id
 // ─────────────────────────────────────────────────────────────────
+import { config } from '../config/index.js';
 import { Router } from 'express';
 import { ProductModel } from '../models/productModel.js';
 import { TransactionModel } from '../models/transactionModel.js';
@@ -12,6 +13,12 @@ import { LexForgeService } from '../services/lexforgeService.js';
 import { PaymentService, SUPPORTED_CURRENCIES, ENABLED_CURRENCIES } from '../services/paymentService.js';
 
 const router = Router();
+
+function publicOrigin(req) {
+  if (config.fiat.publicBaseUrl) return config.fiat.publicBaseUrl.replace(/\/+$/, '');
+  const proto = (req.get('x-forwarded-proto') || req.protocol || 'http').split(',')[0].trim();
+  return `${proto}://${req.get('host')}`;
+}
 
 // "<account>?dt=<tag>" (XRP) → separate fields for the buyer; BTC passes through
 function splitAddress(stored) {
@@ -131,7 +138,7 @@ router.get('/purchase/status/:transaction_id', (req, res) => {
     }
 
     if (delivery && (tx.status === 'delivering' || tx.status === 'complete')) {
-      response.download_link = delivery.download_link || null;
+      response.download_link = delivery.download_token ? `${publicOrigin(req)}/api/download/${delivery.download_token}` : null;
       response.download_expires_at = delivery.expires_at || null;
     }
 

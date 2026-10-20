@@ -212,6 +212,7 @@ function wireCopy() {
 
 function view(s, init) {
   const cur = s.currency, done = s.status === 'complete', bad = ['failed','expired'].includes(s.status);
+  const ready = (s.status === 'delivering' || done) && Boolean(s.download_link);
   const addr = s.payment_address ? `
     <div class="field"><label>Send exactly</label><div class="v" id="amt">${esc(cur === 'SOL' ? Number(s.amount_expected).toFixed(9) : s.amount_expected)} ${esc(cur)}</div>${copyBtn('amt','Copy amount')}</div>
     ${cur === 'SOL' ? '<div class="warn">Send this EXACT amount (all 9 decimals). The tiny extra digits identify your order — do not round, and make sure your wallet or exchange does not deduct fees from it.</div>' : ''}
@@ -221,16 +222,16 @@ function view(s, init) {
     <div class="sub">Quote valid until ${esc(new Date(s.expires_at).toLocaleString())}. Payments are still credited for up to 24 hours. Use a fresh order for each payment.</div>` : '';
   let msg = 'Waiting for your payment…', cls = '';
   if (s.status === 'confirming') msg = 'Payment detected — waiting for confirmations…';
-  if (['confirmed','fingerprinting','delivering'].includes(s.status)) msg = 'Payment confirmed — preparing your personal copy…';
-  if (done) { msg = 'Your download is ready.'; cls = 'ok'; }
+  if (['confirmed','fingerprinting','delivering'].includes(s.status) && !ready) msg = 'Payment confirmed — preparing your personal copy…';
+  if (done || ready) { msg = 'Your download is ready.'; cls = 'ok'; }
   if (bad) { msg = s.status === 'expired' ? 'This order expired. Please start a new order.' : 'Something went wrong with this order. Contact support with the order number below.'; cls = 'bad'; }
   let dl = '';
-  if (done && s.download_link) {
+  if (ready) {
     try { const u = new URL(s.download_link, location.origin);
       if (u.origin === location.origin || u.protocol === 'https:') dl = `<a class="btn" style="display:inline-block;text-decoration:none" href="${esc(u.href)}">Download</a>`;
     } catch {}
   }
-  const showAddr = !done && !bad && !['USD','CAD'].includes(s.currency);
+  const showAddr = !done && !ready && !bad && !['USD','CAD'].includes(s.currency);
   open(`<h2>Order</h2><div class="sub">Order number: <span id="oid">${esc(s.transaction_id)}</span> — keep this to retrieve your download.</div>
     ${showAddr ? addr : ''}<div class="status ${cls}" id="st">${esc(msg)}</div>
     <div class="row">${dl}<button class="btn ghost" id="x">${done||bad ? 'Close' : 'Hide'}</button></div>`);
