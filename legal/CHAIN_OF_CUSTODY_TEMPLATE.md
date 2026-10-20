@@ -1,6 +1,6 @@
 # RaPaX™ Chain of Custody
 ## Transaction Delivery Verification Record
-**Archer Chain Analytics™ — Mahihkan.com**
+**Archer Chain Analytics™ — archerchainanalytics.com**
 **CRA BN: 754975035 | GST/HST: 754975035 RT0001**
 **Saskatoon, Saskatchewan, Canada**
 **Document Type:** Operational Template | **Version:** 1.0

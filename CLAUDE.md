@@ -1,13 +1,13 @@
 # ARCHER CHAIN ANALYTICS — PROJECT INTELLIGENCE PROFILE
 # CLAUDE.md — Master AI Harness Configuration
-# ISC: 102237785 | CRA BN: 709110639 | Owner: Neil Scott Archer
+# ISC: 102237785 | CRA BN: 754975035 | Owner: Neil Scott Archer
 
 ## ENTITY — NEVER ALTER
 Owner: Neil Scott Archer
 Business: Archer Chain Analytics (Sole Proprietor — NOT Inc.)
-ISC: 102237785 | CRA BN: 709110639 | SK: 709110639SK0001
-Address: 417 Avenue G S, 5th Ave N, Saskatoon, SK S7M 1V5
-Email: archerchainanalytics@gmail.com | Website: mahihkan.com
+ISC: 102237785 | CRA BN: 754975035 | GST/HST: 754975035 RT0001
+Address: 415 Fairmont Dr, Saskatoon, SK S7M 5N6
+Email: archerchainanalytics@gmail.com | Website: archerchainanalytics.com
 GitHub: ArcherChainAnalytics-102237785 / ArcherChainAnalytics-Mahihkan
 
 ## 14 PRODUCTS

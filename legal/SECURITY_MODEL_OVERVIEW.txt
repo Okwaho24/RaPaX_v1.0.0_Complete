@@ -1,7 +1,7 @@
 RaPaX™ Security Model Overview
 Threat Model, Attack Surface, Mitigations, and Controls
 Archer Chain Analytics™
-Mahihkan.com
+archerchainanalytics.com
 CRA BN: 754975035 | GST/HST: 754975035 RT0001
 Saskatoon, Saskatchewan, Canada
 

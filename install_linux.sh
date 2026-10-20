@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────
 #  RaPaX™ Installer — Linux / macOS
-#  Archer Chain Analytics™ — Mahihkan.com
+#  Archer Chain Analytics™ — archerchainanalytics.com
 #  Sovereign Digital Vending Machine v1.0.0
 # ─────────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -24,7 +24,7 @@ echo ' ██║  ██║██║  ██║██║     ██║  ██�
 echo ' ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝'
 echo -e "${WHITE}"
 echo ' Sovereign Digital Vending Machine v1.0.0'
-echo ' Archer Chain Analytics™ — Mahihkan.com'
+echo ' Archer Chain Analytics™ — archerchainanalytics.com'
 echo -e "${DIM} ─────────────────────────────────────────${RESET}"
 echo
 
